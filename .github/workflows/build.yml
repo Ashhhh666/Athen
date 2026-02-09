@@ -10,7 +10,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 1
+          fetch-depth: 0
 
       - name: Setup JDK
         uses: actions/setup-java@v4
@@ -49,13 +49,18 @@ jobs:
       - name: Notify Discord
         env:
           TOKEN: ${{ secrets.TOKEN }}
+          COMMITS: ${{ toJson(github.event.commits) }}
+          REPO: ${{ github.repository }}
+          BRANCH: ${{ github.ref_name }}
+          RUN_ID: ${{ github.run_id }}
         run: |
-          curl -X POST https://athen.skies-starred.workers.dev/builds/notify \
+          jq -n \
+            --arg repo "$REPO" \
+            --arg branch "$BRANCH" \
+            --arg run_id "$RUN_ID" \
+            --argjson commits "$COMMITS" \
+            '{repo: $repo, commits: $commits, branch: $branch, run_id: $run_id}' \
+          | curl -X POST https://api.aerii.xyz/builds/notify \
             -H "Content-Type: application/json" \
             -H "Authorization: $TOKEN" \
-            -d "{
-              \"repo\": \"${{ github.repository }}\",
-              \"commit\": \"${{ github.event.head_commit.message }}\",
-              \"branch\": \"${{ github.ref_name }}\",
-              \"run_id\": \"${{ github.run_id }}\"
-            }"
+            -d @-
