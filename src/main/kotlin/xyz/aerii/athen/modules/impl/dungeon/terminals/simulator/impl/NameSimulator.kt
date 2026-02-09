@@ -12,7 +12,7 @@ import xyz.aerii.athen.handlers.Typo
 import xyz.aerii.athen.handlers.Typo.modMessage
 import xyz.aerii.athen.modules.impl.dungeon.terminals.simulator.base.ITerminalSim
 import xyz.aerii.athen.modules.impl.dungeon.terminals.simulator.base.SimulatorMenu
-import xyz.aerii.athen.utils.hasGlint
+import xyz.aerii.athen.utils.glint
 import kotlin.random.Random
 
 class NameSimulator(
@@ -51,7 +51,7 @@ class NameSimulator(
                 val n = it?.hoverName?.string ?: continue
 
                 if (!n.startsWith(targetLetter, ignoreCase = true)) continue
-                if (!it.hasGlint()) return false
+                if (!it.glint()) return false
             }
 
             return true

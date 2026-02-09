@@ -7,7 +7,7 @@ import xyz.aerii.athen.handlers.Typo.stripped
 import xyz.aerii.athen.modules.impl.dungeon.terminals.solver.TerminalSolver
 import xyz.aerii.athen.modules.impl.dungeon.terminals.solver.base.Click
 import xyz.aerii.athen.modules.impl.dungeon.terminals.solver.base.ITerminal
-import xyz.aerii.athen.utils.hasGlint
+import xyz.aerii.athen.utils.glint
 
 object NameSolver : ITerminal(TerminalType.NAME) {
     override fun render(ox: Float, oy: Float, headerH: Float, uiScale: Float) {
@@ -29,6 +29,6 @@ object NameSolver : ITerminal(TerminalType.NAME) {
         val match = TerminalType.NAME.regex.matchEntire(TerminalAPI.currentTitle)
         val targetLetter = match?.groupValues?.get(1)?.lowercase() ?: return
 
-        for ((s, i) in TerminalAPI.currentItems) if (i.hoverName.stripped().lowercase().startsWith(targetLetter) && !i.hasGlint()) list.add(Click(s, 0))
+        for ((s, i) in TerminalAPI.currentItems) if (i.hoverName.stripped().lowercase().startsWith(targetLetter) && !i.glint()) list.add(Click(s, 0))
     }
 }

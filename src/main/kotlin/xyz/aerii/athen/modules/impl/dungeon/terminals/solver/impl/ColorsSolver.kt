@@ -8,7 +8,7 @@ import xyz.aerii.athen.handlers.Typo.stripped
 import xyz.aerii.athen.modules.impl.dungeon.terminals.solver.TerminalSolver
 import xyz.aerii.athen.modules.impl.dungeon.terminals.solver.base.Click
 import xyz.aerii.athen.modules.impl.dungeon.terminals.solver.base.ITerminal
-import xyz.aerii.athen.utils.hasGlint
+import xyz.aerii.athen.utils.glint
 
 object ColorsSolver : ITerminal(TerminalType.COLORS) {
     override fun render(ox: Float, oy: Float, headerH: Float, uiScale: Float) {
@@ -29,7 +29,7 @@ object ColorsSolver : ITerminal(TerminalType.COLORS) {
 
         val str = TerminalType.COLORS.regex.matchEntire(TerminalAPI.currentTitle)?.groupValues?.get(1)?.replace("SILVER", "LIGHT GRAY")?.lowercase() ?: return
         for ((s, stack) in TerminalAPI.currentItems) {
-            if (stack.hasGlint() || stack.item == Items.BLACK_STAINED_GLASS_PANE) continue
+            if (stack.glint() || stack.item == Items.BLACK_STAINED_GLASS_PANE) continue
             if (stack.matches(str)) list.add(Click(s, 0))
         }
     }

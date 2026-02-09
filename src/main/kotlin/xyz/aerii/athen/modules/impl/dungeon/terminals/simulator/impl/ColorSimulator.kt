@@ -11,7 +11,7 @@ import xyz.aerii.athen.handlers.Texter.literal
 import xyz.aerii.athen.handlers.Typo.modMessage
 import xyz.aerii.athen.modules.impl.dungeon.terminals.simulator.base.ITerminalSim
 import xyz.aerii.athen.modules.impl.dungeon.terminals.simulator.base.SimulatorMenu
-import xyz.aerii.athen.utils.hasGlint
+import xyz.aerii.athen.utils.glint
 import kotlin.random.Random
 
 class ColorSimulator(
@@ -36,7 +36,7 @@ class ColorSimulator(
     override fun click(slot: Slot, button: Int) {
         val stack = slot.item?.takeIf { it.item in t.second } ?: return "Invalid item! Does not match the color!".modMessage()
         mapOf(slot.containerSlot to stack.apply { set(DataComponents.ENCHANTMENT_GLINT_OVERRIDE, true) }).a()
-        if (slots.none { it.item?.item in t.second && !it.item.hasGlint() }) SimulatorMenu.a()
+        if (slots.none { it.item?.item in t.second && !it.item.glint() }) SimulatorMenu.a()
     }
 }
 
