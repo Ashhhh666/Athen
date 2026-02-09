@@ -45,7 +45,7 @@ abstract class ITerminal(val terminalType: TerminalType) {
         render(ox, oy + headerH + padding, 0f, uiScale)
     }
 
-    fun click(mx: Float, my: Float, width: Float, height: Float, mouseButton: Int, q: Boolean = false) {
+    fun click(mx: Float, my: Float, width: Float, height: Float, mouseButton: Int) {
         val slots = terminalType.slots
         val gridW = 9 * 18f
         val gridH = (slots / 9) * 18f
@@ -64,21 +64,21 @@ abstract class ITerminal(val terminalType: TerminalType) {
 
         val c = forSlot(slot) ?: return
         if (c.button != mouseButton) return
-        c.click(q)
+        c.click()
     }
 
     fun update(slot: Int, item: ItemStack) {
         compute(slot, item)
     }
 
-    protected fun Click.click(q: Boolean = false) {
-        click(slot, button, q)
+    protected fun Click.click() {
+        click(slot, button)
     }
 
     protected fun drawSlot(x: Float, y: Float, w: Float, h: Float, color: Int, uiScale: Float, radius: Float = TerminalSolver.`ui$slots$roundness` * uiScale) =
         if (TerminalSolver.`ui$slots$fill`) NVGRenderer.drawRectangle(x, y, w, h, color, radius) else NVGRenderer.drawHollowRectangle(x, y, w, h, uiScale, color, radius)
 
-    protected fun click(slot: Int, button: Int, q: Boolean = false) {
+    protected fun click(slot: Int, button: Int) {
         if (TerminalSimulator.s.value) {
             val screen = client.screen as? ITerminalSim ?: return
             val slot0 = screen.menu?.slots?.getOrNull(slot) ?: return
@@ -92,7 +92,7 @@ abstract class ITerminal(val terminalType: TerminalType) {
             TerminalAPI.lastId,
             slot,
             if (button == 0) 2 else button,
-            if (q) ClickType.THROW else if (button == 0) ClickType.CLONE else ClickType.PICKUP,
+            if (button == 0) ClickType.CLONE else ClickType.PICKUP,
             client.player ?: return
         )
     }

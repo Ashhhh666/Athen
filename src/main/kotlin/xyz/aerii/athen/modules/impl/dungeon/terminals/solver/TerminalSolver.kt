@@ -2,6 +2,7 @@
 
 package xyz.aerii.athen.modules.impl.dungeon.terminals.solver
 
+import dev.deftu.omnicore.api.client.input.OmniKeyboard
 import net.minecraft.resources.ResourceLocation
 import net.minecraft.sounds.SoundEvent
 import xyz.aerii.athen.annotations.Load
@@ -113,7 +114,7 @@ object TerminalSolver : Module(
                 }
 
                 (client.options?.keyDrop as? KeyMappingAccessor)?.boundKey?.value if (dropKey) -> {
-                    c(q = true)
+                    c(mouse = if (!OmniKeyboard.isCtrlKeyPressed) 0 else 1)
                     cancel()
                 }
             }
@@ -132,7 +133,7 @@ object TerminalSolver : Module(
         }
     }
 
-    private fun c(q: Boolean = false, mouse: Int = 0) {
+    private fun c(mouse: Int) {
         val solver = solvers[TerminalAPI.currentTerminal] ?: return
         val uiScale = 3f * `ui$scale`
         val mx = Scurry.rawX / uiScale
@@ -141,7 +142,7 @@ object TerminalSolver : Module(
         val width = client.window.width / uiScale
         val height = client.window.height / uiScale
 
-        solver.click(mx, my, width, height, mouse, q)
+        solver.click(mx, my, width, height, mouse)
     }
 
     private fun String.prs(): SoundEvent? {
