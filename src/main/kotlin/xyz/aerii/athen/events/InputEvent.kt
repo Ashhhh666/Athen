@@ -2,13 +2,14 @@ package xyz.aerii.athen.events
 
 import net.minecraft.client.input.KeyEvent
 import net.minecraft.client.input.MouseButtonInfo
+import xyz.aerii.athen.events.core.CancellableEvent
 import xyz.aerii.athen.events.core.Event
 
 sealed class InputEvent {
     sealed class Keyboard {
         data class Press(
             val keyEvent: KeyEvent
-        ) : Event()
+        ) : CancellableEvent()
 
         data class Release(
             val keyEvent: KeyEvent
@@ -18,7 +19,7 @@ sealed class InputEvent {
     sealed class Mouse {
         data class Press(
             val buttonInfo: MouseButtonInfo
-        ) : Event()
+        ) : CancellableEvent()
 
         data class Release(
             val buttonInfo: MouseButtonInfo

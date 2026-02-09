@@ -15,7 +15,7 @@ public class MouseHandlerMixin {
         if (action == 1) {
             if (new InputEvent.Mouse.Press(buttonInfo).post()) ci.cancel();
         } else if (action == 0) {
-            if (new InputEvent.Mouse.Release(buttonInfo).post()) ci.cancel();
+            new InputEvent.Mouse.Release(buttonInfo).post();
         }
     }
 }

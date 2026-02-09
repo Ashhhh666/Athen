@@ -15,7 +15,7 @@ public class KeyboardHandlerMixin {
         if (action == 1) {
             if (new InputEvent.Keyboard.Press(event).post()) ci.cancel();
         } else if (action == 0) {
-            if (new InputEvent.Keyboard.Release(event).post()) ci.cancel();
+            new InputEvent.Keyboard.Release(event).post();
         }
     }
 }
