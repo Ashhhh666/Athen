@@ -152,6 +152,7 @@ object WatcherHelper : Module(
         }.runWhen(DungeonAPI.bloodOpened)
 
         on<ChatEvent> {
+            if (actionBar) return@on
             if (message.stripped() != "[BOSS] The Watcher: Let's see how you can handle this.") return@on
             if (`blood$start` == 0L) return@on
 
