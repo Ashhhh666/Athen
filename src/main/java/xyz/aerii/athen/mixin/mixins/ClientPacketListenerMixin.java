@@ -49,7 +49,7 @@ public class ClientPacketListenerMixin {
                     target = "Lnet/minecraft/network/protocol/Packet;handle(Lnet/minecraft/network/PacketListener;)V"
             )
     )
-    private void wrapPacketHandle(Packet<?> packet, PacketListener listener, Operation<Void> original) {
+    private void athen$handleBundlePacket(Packet<?> packet, PacketListener listener, Operation<Void> original) {
         if (new PacketEvent.Receive(packet).post()) return;
         original.call(packet, listener);
     }

@@ -17,7 +17,7 @@ import xyz.aerii.athen.events.WorldRenderEvent;
 @Mixin(EntityRenderDispatcher.class)
 public class EntityRenderDispatcherMixin {
     @Inject(method = "extractEntity", at = @At("RETURN"))
-    private void athen$storeEntityReference(Entity entity, float partialTick, CallbackInfoReturnable<EntityRenderState> cir) {
+    private void athen$extractEntity(Entity entity, float partialTick, CallbackInfoReturnable<EntityRenderState> cir) {
         EntityRenderState renderState = cir.getReturnValue();
         ((EntityRenderStateAccessor) renderState).athen$setEntity(entity);
     }

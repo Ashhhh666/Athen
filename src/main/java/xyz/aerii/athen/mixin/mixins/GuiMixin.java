@@ -15,12 +15,12 @@ import xyz.aerii.athen.modules.impl.render.ItemNamePosition;
 @Mixin(Gui.class)
 public abstract class GuiMixin {
     @Inject(method = "render", at = @At("HEAD"))
-    private void athen$render(GuiGraphics guiGraphics, DeltaTracker deltaTracker, CallbackInfo ci) {
+    private void athen$render$pre(GuiGraphics guiGraphics, DeltaTracker deltaTracker, CallbackInfo ci) {
         new GuiEvent.Render.Pre(guiGraphics).post();
     }
 
     @Inject(method = "render", at = @At("TAIL"))
-    private void athen$renderPost(GuiGraphics guiGraphics, DeltaTracker deltaTracker, CallbackInfo ci) {
+    private void athen$render$post(GuiGraphics guiGraphics, DeltaTracker deltaTracker, CallbackInfo ci) {
         new GuiEvent.Render.Post(guiGraphics).post();
     }
 
