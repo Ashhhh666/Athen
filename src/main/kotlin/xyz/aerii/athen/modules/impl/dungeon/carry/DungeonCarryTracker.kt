@@ -133,11 +133,9 @@ object DungeonCarryTracker : Module(
             if (tracked.isEmpty()) return@on
 
             for (teammate in DungeonAPI.teammates) {
-                if (teammate.name in tracked) {
-                    teammate.entity?.let { entity ->
-                        Render3D.drawBox(entity.renderBoundingBox, playerColor, playerLineWidth, false)
-                    }
-                }
+                if (teammate.name !in tracked) continue
+                val e = teammate.entity ?: continue
+                Render3D.drawBox(e.renderBoundingBox, playerColor, playerLineWidth, false)
             }
         }
 

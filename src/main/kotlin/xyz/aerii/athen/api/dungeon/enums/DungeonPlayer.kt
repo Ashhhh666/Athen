@@ -34,7 +34,9 @@
 package xyz.aerii.athen.api.dungeon.enums
 
 import net.minecraft.world.entity.Entity
-import xyz.aerii.athen.handlers.Smoothie
+import tech.thatgravyboat.skyblockapi.utils.DiscoverableValue
+import xyz.aerii.athen.Athen
+import xyz.aerii.athen.handlers.Smoothie.client
 import xyz.aerii.athen.handlers.Typo.stripped
 
 class DungeonPlayer(
@@ -56,10 +58,14 @@ class DungeonPlayer(
     var dead = false
         internal set
 
-    val entity: Entity?
-        get() = Smoothie.level
-            ?.entitiesForRendering()
-            ?.firstOrNull { it.name.stripped() == name }
+    val entity by DiscoverableValue(::d)
+
+    init {
+        Athen.LOGGER.debug("Created KuudraPlayer with entity: {}", entity)
+    }
+
+    private fun d(): Entity? =
+        client.level?.players()?.find { it.uuid.version() == 4 && it.name.stripped() == name }
 
     override fun toString() =
         "DungeonPlayer(name='$name', dead=$dead, class=$dungeonClass, classLevel=$classLevel, cataLevel=$cataLevel)"
