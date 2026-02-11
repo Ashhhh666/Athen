@@ -35,7 +35,7 @@ package xyz.aerii.athen.api.dungeon.enums
 
 import net.minecraft.world.entity.Entity
 import xyz.aerii.athen.Athen
-import xyz.aerii.athen.utils.Discoverable
+import xyz.aerii.athen.handlers.Schrodinger
 import xyz.aerii.athen.handlers.Smoothie.client
 import xyz.aerii.athen.handlers.Typo.stripped
 
@@ -58,7 +58,7 @@ class DungeonPlayer(
     var dead = false
         internal set
 
-    val entity by Discoverable(::d) { !it.isAlive }
+    val entity by Schrodinger(::d) { !it.isAlive }
 
     init {
         Athen.LOGGER.debug("Created KuudraPlayer with entity: {}", entity)

@@ -1,6 +1,6 @@
-package xyz.aerii.athen.utils
+package xyz.aerii.athen.handlers
 
-class Discoverable<T>(
+class Schrodinger<T>(
     private val fn: () -> T?,
     immediate: Boolean = false,
     private val predicate: (T) -> Boolean = { false },
