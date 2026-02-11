@@ -1,11 +1,10 @@
 package xyz.aerii.athen.api.kuudra.enums
 
 import net.minecraft.world.entity.Entity
-import tech.thatgravyboat.skyblockapi.utils.DiscoverableValue
 import xyz.aerii.athen.Athen
+import xyz.aerii.athen.utils.Discoverable
 import xyz.aerii.athen.handlers.Smoothie.client
 import xyz.aerii.athen.handlers.Typo.stripped
-import kotlin.getValue
 
 class KuudraPlayer(
     val name: String
@@ -13,7 +12,7 @@ class KuudraPlayer(
     var deaths = 0
         internal set
 
-    val entity by DiscoverableValue(::d)
+    val entity by Discoverable(::d) { !it.isAlive }
 
     init {
         Athen.LOGGER.debug("Created KuudraPlayer with entity: {}", entity)
