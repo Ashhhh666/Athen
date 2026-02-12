@@ -42,7 +42,7 @@ object KuudraAPI {
             reset()
         }
 
-        on<KuudraEvent.Start> {
+        on<KuudraEvent.Start> (priority = Int.MIN_VALUE) {
             teammates.clear()
             for (p in McClient.players) teammates.add(KuudraPlayer(p.profile.name))
         }
@@ -65,8 +65,13 @@ object KuudraAPI {
                     inRun = true
                 }
 
+                message == "[NPC] Elle: Good job everyone. A hard fought battle come to an end. Let's get out of here before we run into any more trouble!" -> {
+                    KuudraEvent.End.Any.post()
+                    inRun = false
+                }
+
                 completeRegex.matches(message) -> {
-                    KuudraEvent.End.post()
+                    KuudraEvent.End.Success.post()
                     inRun = false
                 }
 

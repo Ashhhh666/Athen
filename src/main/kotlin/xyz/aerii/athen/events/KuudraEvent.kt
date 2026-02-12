@@ -5,5 +5,9 @@ import xyz.aerii.athen.events.core.Event
 sealed class KuudraEvent {
     data object Start : Event()
 
-    data object End : Event()
+    sealed class End {
+        data object Success : Event()
+
+        data object Any : Event()
+    }
 }

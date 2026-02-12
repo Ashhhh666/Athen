@@ -98,7 +98,7 @@ object KuudraCarryTracker : Module(
             }
         }
 
-        on<KuudraEvent.End> {
+        on<KuudraEvent.End.Success> {
             val tier = KuudraAPI.tier ?: return@on
 
             for (teammate in KuudraAPI.teammates) {
