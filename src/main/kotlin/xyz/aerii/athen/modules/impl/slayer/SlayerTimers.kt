@@ -26,7 +26,7 @@ object SlayerTimers : Module(
     Category.SLAYER
 ) {
     private val scribble = Scribble("features/slayerTimers")
-    private var killPBs = scribble.mutableMap("kill_pbs", Codec.STRING, Codec.DOUBLE)
+    private val killPBs = scribble.mutableMap("kill_pbs", Codec.STRING, Codec.DOUBLE)
     private var questStartTime: Long = 0
 
     init {

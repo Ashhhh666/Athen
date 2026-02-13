@@ -125,6 +125,15 @@ class Scribble(private val path: String, private val tts: Int = 15) {
                 }
             }
 
+        init {
+            val obj = load()
+
+            if (!obj.has(key)) default.toJson(codec)?.let {
+                obj.add(key, it)
+                dirty()
+            }
+        }
+
         override fun getValue(thisRef: Any?, property: KProperty<*>): T = value
 
         override fun setValue(thisRef: Any?, property: KProperty<*>, value: T) {

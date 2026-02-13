@@ -62,7 +62,7 @@ object PartyFinder : Module(
     private val nameRegex = Regex("^ (?<username>\\w+): (?<className>\\w+) \\((?<classLevel>\\d+)\\)$")
     private val classRegex = Regex("^Currently Selected: (?<className>\\w+)$")
     private val pfJoinRegex = Regex("^Party Finder > (?:\\[.{1,7}])? ?(?<name>.{1,16}) joined the dungeon group! \\(.*\\)$")
-    private val noteRegex = Regex("Note: (?<note>.+)")
+    private val noteRegex = Regex("^Note: (?<note>.+)")
 
     private var inPartyFinder = false
     private var inMainGate = false
