@@ -74,6 +74,8 @@ object Chronos {
         private data class ScheduledTask(val action: () -> Unit, val recurring: Long = 0, val id: String? = null)
         private val pending = ConcurrentHashMap<Long, MutableList<ScheduledTask>>()
         private val recurring = ConcurrentHashMap<String, TaskImpl>()
+        private val oneShots = ConcurrentHashMap<String, TaskImpl>()
+
         private var nextKey = atomic(0L)
         private var currentTick = atomic(0L)
 
@@ -85,9 +87,7 @@ object Chronos {
                 runSafely(task.action)
 
                 val recurring = task.recurring
-                if (recurring > 0 && task.id != null) {
-                    scheduleTask(tick + recurring, task)
-                }
+                if (recurring > 0 && task.id != null) scheduleTask(tick + recurring, task)
             }
         }
 
@@ -95,17 +95,21 @@ object Chronos {
             pending.computeIfAbsent(tick) { mutableListOf() }.add(task)
         }
 
-        infix fun run(action: () -> Unit) {
-            scheduleTask(currentTick.value + 1, ScheduledTask(action))
-        }
+        infix fun run(action: () -> Unit): Task = after(1) then action
 
         infix fun after(ticks: Int) = ScheduleBuilder(ticks.toLong())
 
         infix fun every(ticks: Int) = RepeatBuilder(ticks.toLong())
 
         inner class ScheduleBuilder(private val delay: Long) {
-            infix fun then(action: () -> Unit) {
-                scheduleTask(currentTick.value + delay, ScheduledTask(action))
+            infix fun then(action: () -> Unit): Task {
+                val id = "tick_once_${nextKey.incrementAndGet()}"
+                val task = TaskImpl { oneShots.remove(id) }
+                oneShots[id] = task
+
+                scheduleTask(currentTick.value + delay, ScheduledTask(action, id = id))
+
+                return task
             }
         }
 
@@ -114,8 +118,8 @@ object Chronos {
 
             infix fun after(ticks: Int) = apply { startDelay = ticks.toLong() }
 
-            infix fun times(action: () -> Unit): Task {
-                val id = "recurring_${nextKey.incrementAndGet()}"
+            infix fun repeat(action: () -> Unit): Task {
+                val id = "tick_recurring_${nextKey.incrementAndGet()}"
                 val task = TaskImpl { recurring.remove(id) }
                 recurring[id] = task
 
@@ -127,7 +131,7 @@ object Chronos {
                 return task
             }
 
-            infix fun repeat(action: () -> Unit) = times(action)
+            infix fun times(action: () -> Unit) = repeat(action)
         }
     }
 
@@ -140,16 +144,25 @@ object Chronos {
 
         infix fun every(duration: Duration) = TimeRepeatBuilder(duration)
 
-        private fun scheduleOnce(delay: Duration, action: () -> Unit) {
-            executor.schedule(
-                { runSafely(action) },
+        private fun scheduleOnce(delay: Duration, action: () -> Unit): Task {
+            val id = "time_once_${nextId.incrementAndGet()}"
+            val task = TaskImpl { tasks.remove(id)?.first?.cancel(false) }
+
+            val t = executor.schedule(
+                {
+                    runSafely(action)
+                    tasks.remove(id)
+                },
                 delay.inWholeMilliseconds,
                 TimeUnit.MILLISECONDS
             )
+
+            tasks[id] = t to task
+            return task
         }
 
         private fun scheduleRepeating(interval: Duration, initialDelay: Duration, action: () -> Unit): Task {
-            val id = "time_${nextId.incrementAndGet()}"
+            val id = "time_recurring_${nextId.incrementAndGet()}"
             val task = TaskImpl { tasks.remove(id)?.first?.cancel(false) }
 
             val future = executor.scheduleAtFixedRate(
