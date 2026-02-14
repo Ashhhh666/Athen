@@ -17,6 +17,7 @@ class SliderElement(
     private val min: Double,
     private val max: Double,
     private val showDouble: Boolean,
+    private val unit: String,
     configKey: String,
     onUpdate: (String, Any) -> Unit
 ) : IBaseUI(name, configKey, onUpdate) {
@@ -40,18 +41,22 @@ class SliderElement(
             onUpdate(configKey, value)
         }
 
-        val valueText = if (editing) editText else str()
+        val rawText = if (editing) editText else str()
+        val valueText = if (unit.isNotEmpty()) "$rawText $unit" else rawText
+        val rawW = textWidth(rawText)
+
         drawText(name, x + 6f, y + 8f)
 
         val textW = textWidth(valueText)
         val textX = x + width - textW - 6f
         val textY = y + 8f
-        val isTextHovered = isAreaHovered(lastX, lastY + 20f, width, 16f)
+        val isTextHovered = isAreaHovered(textX - 4f, textY - 2f, textW + 8f, 20f)
 
         `anim$tooltip`.value = if (isTextHovered && !editing) 1f else 0f
-        drawText(valueText, textX, textY, color = if (editing) Mocha.Text.argb else Mocha.Subtext0.argb)
+        drawText(rawText, textX, textY, color = if (editing) Mocha.Text.argb else Mocha.Subtext0.argb)
+        if (unit.isNotEmpty()) drawText(" $unit", textX + rawW, textY, color = Mocha.Subtext0.argb)
 
-        if (editing) caretBlink = drawCaret(textX + textW + 2f, textY, 16f, caretBlink)
+        if (editing) caretBlink = drawCaret(textX + rawW + 2f, textY, 16f, caretBlink)
         if (`anim$tooltip`.value > 0f) drawTooltip(x, y)
 
         val sliderY = y + 28f
@@ -80,13 +85,13 @@ class SliderElement(
         if (button != 0) return false
 
         val str = str()
-        val textW = textWidth(str)
+        val textW = textWidth(if (str.isEmpty()) "" else if (unit.isNotEmpty()) "$str $unit" else str)
         val textX = lastX + width - textW - 6f
         val textY = lastY + 8f
 
         if (isAreaHovered(textX - 4f, textY - 2f, textW + 8f, 20f)) {
             editing = true
-            editText = str()
+            editText = str
             caretBlink = System.currentTimeMillis()
             return true
         }

@@ -36,13 +36,13 @@ object TerminalSolver : Module(
     val keybindR by config.keybind("Keybind right click").childOf { settingsExpandable }
 
     private val guiExpandable by config.expandable("GUI")
-    val `ui$scale` by config.slider("Scale", 1f, 0.1f, 2f, true).childOf { guiExpandable }
-    val `ui$roundness` by config.slider("Roundness", 0f, 0f, 10f, true).childOf { guiExpandable }
+    val `ui$scale` by config.slider("Scale", 1f, 0.1f, 2f, showDouble = true).childOf { guiExpandable }
+    val `ui$roundness` by config.slider("Roundness", 0f, 0f, 10f, showDouble = true).childOf { guiExpandable }
     val `ui$bg` by config.colorPicker("Background", Color(0, 0, 0, 150)).childOf { guiExpandable }
     val `ui$border` by config.colorPicker("Border", Color(Mocha.Mauve.rgba)).childOf { guiExpandable }
     val `ui$header` by config.colorPicker("Header", Color(20, 20, 20, 200)).childOf { guiExpandable }
     val `ui$slots$fill` by config.switch("Slots: Fill").childOf { guiExpandable }
-    val `ui$slots$roundness` by config.slider("Slots: Roundness", 0f, 0f, 10f, true).childOf { guiExpandable }
+    val `ui$slots$roundness` by config.slider("Slots: Roundness", 0f, 0f, 10f, showDouble = true).childOf { guiExpandable }
     val `ui$numbers$showText` by config.switch("Numbers: Text", true).childOf { guiExpandable }
 
     private val soundExpandable by config.expandable("Sounds")
@@ -50,8 +50,8 @@ object TerminalSolver : Module(
     private val clickSound = config.textInput("Sound", "block.note_block.pling").childOf { soundExpandable }.custom($$"sound$click")
     private val _unused by config.button("Play") { `sound$click`?.play(`sound$volume`, `sound$pitch`) }.childOf { soundExpandable }
     private val _unused0 by config.button("Open sounds list") { "https://www.digminecraft.com/lists/sound_list_pc.php".url() }.childOf { soundExpandable }
-    val `sound$pitch` by config.slider("Pitch", 1f, 0f, 1f, true).childOf { soundExpandable }
-    val `sound$volume` by config.slider("Volume", 1f, 0f, 1f, true).childOf { soundExpandable }
+    val `sound$pitch` by config.slider("Pitch", 1f, 0f, 1f, showDouble = true).childOf { soundExpandable }
+    val `sound$volume` by config.slider("Volume", 1f, 0f, 1f, showDouble = true).childOf { soundExpandable }
     var `sound$click`: SoundEvent? = null
 
     private val colorExpandable by config.expandable("Colors")

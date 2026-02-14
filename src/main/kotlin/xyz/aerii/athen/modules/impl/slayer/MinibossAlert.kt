@@ -26,7 +26,7 @@ object MinibossAlert : Module(
     private val vanillaMessage by config.switch("Use mc message").dependsOn { sendMessage }
     private val showTitle by config.switch("Show title", true)
     private val vanillaTitle by config.switch("Use mc title").dependsOn { showTitle }
-    private val maxDistance by config.slider("Maximum distance", 10, 1, 15)
+    private val maxDistance by config.slider("Maximum distance", 10, 1, 15, "blocks")
     private val alertText by config.textInput("Alert text", "<aqua>Miniboss spawned!")
     private val bigBoiText by config.textInput("Big boi text", "<red>Big boi spawned!")
     private val _unused0 by config.textParagraph("The same text will be used for both title and message.\n<gray>Big boi = Big miniboss")

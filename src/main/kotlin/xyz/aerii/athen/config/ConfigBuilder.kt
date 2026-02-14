@@ -41,7 +41,7 @@ class ConfigBuilder(
 
     fun switch(name: String, default: Boolean = false) = option(default, ConfigManager.ElementData.Switch(name, "", default))
 
-    inline fun <reified T : Number> slider(name: String, default: T, min: T, max: T, showDouble: Boolean = false) = option(default, ConfigManager.ElementData.Slider(name, "", min.toDouble(), max.toDouble(), default.toDouble(), showDouble))
+    inline fun <reified T : Number> slider(name: String, default: T, min: T, max: T, unit: String = "", showDouble: Boolean = false) = option(default, ConfigManager.ElementData.Slider(name, "", min.toDouble(), max.toDouble(), default.toDouble(), showDouble, unit))
 
     fun textInput(name: String, default: String = "", placeholder: String = "") = option(default, ConfigManager.ElementData.TextInput(name, "", default, placeholder, Int.MAX_VALUE))
 

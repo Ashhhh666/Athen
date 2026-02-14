@@ -20,7 +20,7 @@ class IElement(private val data: ConfigManager.ElementData, onUpdate: (String, A
 
     private val uiElement = when (data) {
         is ConfigManager.ElementData.Switch -> SwitchElement(data.name, ConfigManager.getValue(data.key) as? Boolean ?: data.default, data.key, onUpdate)
-        is ConfigManager.ElementData.Slider -> SliderElement(data.name, (ConfigManager.getValue(data.key) as? Number)?.toDouble() ?: data.default, data.min, data.max, data.showDouble, data.key, onUpdate)
+        is ConfigManager.ElementData.Slider -> SliderElement(data.name, (ConfigManager.getValue(data.key) as? Number)?.toDouble() ?: data.default, data.min, data.max, data.showDouble, data.unit, data.key, onUpdate)
         is ConfigManager.ElementData.Dropdown -> DropdownElement(data.name, data.options, ConfigManager.getValue(data.key) as? Int ?: data.default, data.key, onUpdate)
         is ConfigManager.ElementData.TextInput -> TextInputElement(data.name, ConfigManager.getValue(data.key) as? String ?: data.default, data.maxLength, data.key, onUpdate, data.placeholder)
         is ConfigManager.ElementData.ColorPicker -> ColorPickerElement(data.name, ConfigManager.getValue(data.key) as? Color ?: data.default, data.key, onUpdate)

@@ -14,8 +14,8 @@ class HUDElementContext(
     fun switch(name: String, default: Boolean = false) =
         builder.switch(name, default).dependsOn { hudElement.enabled }
 
-    inline fun <reified T : Number> slider(name: String, default: T, min: T, max: T, showDouble: Boolean = false) =
-        builder.slider(name, default, min, max, showDouble).dependsOn { hudElement.enabled }
+    inline fun <reified T : Number> slider(name: String, default: T, min: T, max: T, unit: String = "", showDouble: Boolean = false) =
+        builder.slider(name, default, min, max, unit, showDouble).dependsOn { hudElement.enabled }
 
     fun textInput(name: String, default: String = "", placeholder: String = "") =
         builder.textInput(name, default, placeholder).dependsOn { hudElement.enabled }

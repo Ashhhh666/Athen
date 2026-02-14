@@ -26,8 +26,8 @@ object TerminatorSounds : Module(
 ) {
     private var real: SoundEvent? = null
     private val s = config.textInput("Sound", "block.note_block.bit").custom("sound")
-    private val p by config.slider("Pitch", 1f, 0f, 1f, true)
-    private val v by config.slider("Volume", 1f, 0f, 1f, true)
+    private val p by config.slider("Pitch", 1f, 0f, 1f, showDouble = true)
+    private val v by config.slider("Volume", 1f, 0f, 1f, showDouble = true)
 
     private val _unused by config.button("Play") {
         real?.play(v, p)
