@@ -25,8 +25,10 @@ object KuudraAPI {
     private val tierRegex = Regex(" ⏣ Kuudra's Hollow \\(T(?<t>\\d+)\\)")
     private val completeRegex = Regex("\\s+KUUDRA DOWN!")
 
+    private val _k = Schrodinger(::fn) { !it.isAlive }
+
     @JvmStatic
-    val kuudra: MagmaCube? by Schrodinger(::fn) { !it.isAlive }
+    val kuudra: MagmaCube? by _k
 
     @JvmStatic
     var inRun: Boolean = false
@@ -77,7 +79,7 @@ object KuudraAPI {
 
                 else -> {
                     val m = deathRegex.find(message) ?: return@on
-                    val n = m.groups["username"]?.value ?: Smoothie.playerName ?: return@on
+                    val n = m.groups["username"]?.value?.takeIf { it != "You" } ?: Smoothie.playerName ?: return@on
 
                     teammates.find { it.name == n }?.deaths++
                 }
@@ -91,6 +93,7 @@ object KuudraAPI {
     private fun reset() {
         tier = null
         inRun = false
+        _k._v = null
         teammates.clear()
     }
 }

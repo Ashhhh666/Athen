@@ -1,3 +1,5 @@
+@file:Suppress("PropertyName")
+
 package xyz.aerii.athen.handlers
 
 class Schrodinger<T>(
@@ -5,8 +7,7 @@ class Schrodinger<T>(
     immediate: Boolean = false,
     private val predicate: (T) -> Boolean = { false },
 ) : Lazy<T?> {
-
-    private var _v: T? = null
+    var _v: T? = null
 
     override val value: T?
         get() {
