@@ -11,7 +11,6 @@ import xyz.aerii.athen.events.WorldRenderEvent
 import xyz.aerii.athen.events.core.runWhen
 import xyz.aerii.athen.modules.Module
 import xyz.aerii.athen.ui.themes.Catppuccin
-import xyz.aerii.athen.utils.markerAABB
 import xyz.aerii.athen.utils.render.Render2D.sizedText
 import xyz.aerii.athen.utils.render.Render3D
 import java.awt.Color
@@ -40,7 +39,7 @@ object BuildInfo : Module(
         on<WorldRenderEvent.Extract> {
             if (!render) return@on
 
-            for (e in KuudraSupply.every) if (!e.built) Render3D.drawFilledBox(e.buildPos.markerAABB(), color, depthTest = false)
+            for (e in KuudraSupply.every) if (!e.built) Render3D.drawFilledBox(e.buildAABB, color, depthTest = false)
         }.runWhen(waypoints.state)
     }
 }

@@ -1,6 +1,7 @@
 package xyz.aerii.athen.api.kuudra.enums
 
 import net.minecraft.core.BlockPos
+import xyz.aerii.athen.utils.markerAABB
 
 object KuudraSupply {
     object Shop : ISupply(BlockPos(-98, 78, -113))
@@ -19,6 +20,8 @@ object KuudraSupply {
         every.find { it.buildPos == pos }
 
     open class ISupply(val buildPos: BlockPos) {
+        val buildAABB = buildPos.markerAABB()
+
         var built = false
         var active = false
 
