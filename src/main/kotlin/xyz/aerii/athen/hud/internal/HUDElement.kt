@@ -3,6 +3,7 @@ package xyz.aerii.athen.hud.internal
 import net.minecraft.client.gui.GuiGraphics
 import xyz.aerii.athen.config.ConfigBuilder
 import xyz.aerii.athen.config.ConfigManager
+import xyz.aerii.athen.utils.ZERO_PAIR
 import xyz.aerii.athen.utils.render.toScaleMC
 
 data class HUDElement(
@@ -64,7 +65,7 @@ data class HUDElement(
     }
 
     fun render(graphics: GuiGraphics, isPreview: Boolean) {
-        val (w, h) = graphics.renderer(isPreview) ?: (0 to 0)
+        val (w, h) = graphics.renderer(isPreview) ?: ZERO_PAIR
         width = w
         height = h
     }

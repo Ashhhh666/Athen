@@ -17,3 +17,6 @@ val ALWAYS_TRUE = React(true).immutable()
 
 @JvmField
 val ALWAYS_FALSE = React(false).immutable()
+
+@JvmField
+val ZERO_PAIR = 0 to 0
