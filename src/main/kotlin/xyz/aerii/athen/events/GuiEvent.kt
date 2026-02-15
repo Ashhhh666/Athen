@@ -67,12 +67,20 @@ sealed class GuiEvent {
             data class Press(
                 val keyEvent: KeyEvent
             ) : CancellableEvent()
+
+            data class Release(
+                val keyEvent: KeyEvent
+            ) : Event()
         }
 
         sealed class Mouse {
             data class Press(
                 val keyEvent: MouseButtonEvent
             ) : CancellableEvent()
+
+            data class Release(
+                val keyEvent: MouseButtonEvent
+            ) : Event()
         }
     }
 }

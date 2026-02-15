@@ -11,7 +11,6 @@ import xyz.aerii.athen.annotations.Load
 import xyz.aerii.athen.annotations.OnlyIn
 import xyz.aerii.athen.config.Category
 import xyz.aerii.athen.events.GuiEvent
-import xyz.aerii.athen.events.InputEvent
 import xyz.aerii.athen.handlers.Beacon
 import xyz.aerii.athen.handlers.Smoothie.client
 import xyz.aerii.athen.handlers.Texter.colorCoded
@@ -51,12 +50,12 @@ object MissingEnchants : Module(
             }
         }
 
-        on<InputEvent.Keyboard.Press> {
-            if (client.screen != null && keybind == keyEvent.key) (client.screen as? AbstractContainerScreen<*>)?.getHoveredSlot()?.item?.invalidate()
+        on<GuiEvent.Input.Key.Press> {
+            if (keybind == keyEvent.key) (client.screen as? AbstractContainerScreen<*>)?.getHoveredSlot()?.item?.invalidate()
         }
 
-        on<InputEvent.Keyboard.Release> {
-            if (client.screen != null && keybind == keyEvent.key) (client.screen as? AbstractContainerScreen<*>)?.getHoveredSlot()?.item?.invalidate()
+        on<GuiEvent.Input.Key.Release> {
+            if (keybind == keyEvent.key) (client.screen as? AbstractContainerScreen<*>)?.getHoveredSlot()?.item?.invalidate()
         }
 
         on<GuiEvent.Tooltip.Update> {

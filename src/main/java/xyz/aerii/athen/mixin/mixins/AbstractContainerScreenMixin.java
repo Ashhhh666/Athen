@@ -2,15 +2,12 @@ package xyz.aerii.athen.mixin.mixins;
 
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
-import net.minecraft.client.input.KeyEvent;
-import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.world.inventory.ClickType;
 import net.minecraft.world.inventory.Slot;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import xyz.aerii.athen.events.GuiEvent;
 
 @Mixin(AbstractContainerScreen.class)
@@ -36,15 +33,5 @@ public class AbstractContainerScreenMixin {
     @Inject(method = "slotClicked", at = @At("HEAD"), cancellable = true)
     private void athen$slotClick(Slot slot, int slotId, int mouseButton, ClickType type, CallbackInfo ci) {
         if (new GuiEvent.Slots.Click(slot, slotId, mouseButton, type).post()) ci.cancel();
-    }
-
-    @Inject(method = "keyPressed", at = @At("HEAD"), cancellable = true)
-    private void athen$keyPress(KeyEvent event, CallbackInfoReturnable<Boolean> cir) {
-        if (new GuiEvent.Input.Key.Press(event).post()) cir.setReturnValue(true);
-    }
-
-    @Inject(method = "mouseClicked", at = @At("HEAD"), cancellable = true)
-    private void athen$mouseClick(MouseButtonEvent event, boolean isDoubleClick, CallbackInfoReturnable<Boolean> cir) {
-        if (new GuiEvent.Input.Mouse.Press(event).post()) cir.setReturnValue(true);
     }
 }

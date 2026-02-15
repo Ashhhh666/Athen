@@ -5,6 +5,9 @@ import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLifecycleEvents
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents
 import net.fabricmc.fabric.api.client.rendering.v1.SpecialGuiElementRegistry
 import net.fabricmc.fabric.api.client.rendering.v1.world.WorldRenderEvents
+import net.fabricmc.fabric.api.client.screen.v1.ScreenEvents
+import net.fabricmc.fabric.api.client.screen.v1.ScreenKeyboardEvents
+import net.fabricmc.fabric.api.client.screen.v1.ScreenMouseEvents
 import net.hypixel.modapi.HypixelModAPI
 import net.hypixel.modapi.fabric.event.HypixelModAPICallback
 import net.hypixel.modapi.packet.impl.clientbound.event.ClientboundLocationPacket
@@ -84,6 +87,24 @@ object Signal {
 
         WorldRenderEvents.END_MAIN.register { context ->
             WorldRenderEvent.Render(context.matrices(), context.consumers() as? MultiBufferSource.BufferSource ?: return@register).post()
+        }
+
+        ScreenEvents.BEFORE_INIT.register { _, screen, _, _ ->
+            ScreenMouseEvents.allowMouseClick(screen).register { _, event ->
+                !GuiEvent.Input.Mouse.Press(event).post()
+            }
+
+            ScreenMouseEvents.allowMouseRelease(screen).register { _, event ->
+                !GuiEvent.Input.Mouse.Release(event).post()
+            }
+
+            ScreenKeyboardEvents.allowKeyPress(screen).register { _, event ->
+                !GuiEvent.Input.Key.Press(event).post()
+            }
+
+            ScreenKeyboardEvents.allowKeyRelease(screen).register { _, event ->
+                !GuiEvent.Input.Key.Release(event).post()
+            }
         }
 
         onReceive<ClientboundSystemChatPacket> {
