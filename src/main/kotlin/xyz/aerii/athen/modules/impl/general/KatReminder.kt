@@ -95,9 +95,20 @@ object KatReminder : Module(
             val message = message.stripped().takeIf { "[NPC] Kat: " in it } ?: return@on
 
             when (message) {
-                "[NPC] Kat: A flower? For me? How sweet!" -> fn1(1.days)
-                "[NPC] Kat: A bouquet? For me? How sweet!" -> fn1(5.days)
-                "[NPC] Kat: If you have any other pets you'd like to upgrade, you know where to find me!" -> reset()
+                "[NPC] Kat: A flower? For me? How sweet!" -> {
+                    fn1(1.days)
+                    return@on
+                }
+
+                "[NPC] Kat: A bouquet? For me? How sweet!" -> {
+                    fn1(5.days)
+                    return@on
+                }
+
+                "[NPC] Kat: If you have any other pets you'd like to upgrade, you know where to find me!" -> {
+                    reset()
+                    return@on
+                }
             }
 
             giveRegex.findThenNull(message, "pet") { (p) ->
