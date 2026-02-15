@@ -21,7 +21,7 @@ object TeammateHighlight : Module(
     Category.KUUDRA
 ) {
     private val lineWidth by config.slider("Line width", 2f, 1f, 10f)
-    private val color by config.colorPicker("Color", Color(Catppuccin.Mocha.Green.rgba))
+    private val color by config.colorPicker("Color", Color(Catppuccin.Mocha.Green.argb, true))
 
     init {
         on<WorldRenderEvent.Extract> {

@@ -7,8 +7,8 @@ import org.lwjgl.glfw.GLFW
 import xyz.aerii.athen.config.ui.elements.base.IBaseUI
 import xyz.aerii.athen.handlers.Scurry.isAreaHovered
 import xyz.aerii.athen.ui.themes.Catppuccin.Mocha
+import xyz.aerii.athen.utils.brighten
 import xyz.aerii.athen.utils.render.animations.springValue
-import java.awt.Color
 
 class KeybindElement(
     name: String,
@@ -36,7 +36,7 @@ class KeybindElement(
         val isHovered = isAreaHovered(buttonX, y + 8f, buttonW, 20f)
 
         `anim$bg`.value = when {
-            listening -> Color(Mocha.Peach.argb).darker().rgb
+            listening -> Mocha.Peach.argb.brighten(0.8f)
             isHovered -> Mocha.Surface2.argb
             else -> Mocha.Base.argb
         }

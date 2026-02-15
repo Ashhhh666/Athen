@@ -39,7 +39,7 @@ object TerminalSolver : Module(
     val `ui$scale` by config.slider("Scale", 1f, 0.1f, 2f, showDouble = true).childOf { guiExpandable }
     val `ui$roundness` by config.slider("Roundness", 0f, 0f, 10f, showDouble = true).childOf { guiExpandable }
     val `ui$bg` by config.colorPicker("Background", Color(0, 0, 0, 150)).childOf { guiExpandable }
-    val `ui$border` by config.colorPicker("Border", Color(Mocha.Mauve.rgba)).childOf { guiExpandable }
+    val `ui$border` by config.colorPicker("Border", Color(Mocha.Mauve.argb, true)).childOf { guiExpandable }
     val `ui$header` by config.colorPicker("Header", Color(20, 20, 20, 200)).childOf { guiExpandable }
     val `ui$slots$fill` by config.switch("Slots: Fill").childOf { guiExpandable }
     val `ui$slots$roundness` by config.slider("Slots: Roundness", 0f, 0f, 10f, showDouble = true).childOf { guiExpandable }
@@ -63,10 +63,10 @@ object TerminalSolver : Module(
     val `numbers$third` by config.colorPicker("Numbers: 3rd", Color(0, 150, 0, 180)).childOf { colorExpandable }
     val `rubix$positive` by config.colorPicker("Rubix: Positive", Color(0, 114, 255, 180)).childOf { colorExpandable }
     val `rubix$negative` by config.colorPicker("Rubix: Negative", Color(205, 0, 0, 180)).childOf { colorExpandable }
-    val `melody$fill` by config.colorPicker("Melody: Fill", Color(Mocha.Mauve.rgba)).childOf { colorExpandable }
+    val `melody$fill` by config.colorPicker("Melody: Fill", Color(Mocha.Mauve.argb, true)).childOf { colorExpandable }
     val `melody$correct` by config.colorPicker("Melody: Correct", Color(0, 255, 0, 180)).childOf { colorExpandable }
     val `melody$wrong` by config.colorPicker("Melody: Wrong", Color(205, 0, 0, 180)).childOf { colorExpandable }
-    val `melody$other` by config.colorPicker("Melody: Other", Color(Mocha.Base.rgba)).childOf { colorExpandable }
+    val `melody$other` by config.colorPicker("Melody: Other", Color(Mocha.Base.argb, true)).childOf { colorExpandable }
 
     private val solvers = mapOf(
         TerminalType.NUMBERS to NumbersSolver,

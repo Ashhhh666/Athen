@@ -27,7 +27,7 @@ object KuudraInfo : Module(
 ) {
     private val highlight = config.switch("Highlight", true).custom("highlight")
     private val lineWidth by config.slider("Line width", 2f, 1f, 10f).dependsOn { highlight.value }
-    private val color by config.colorPicker("Color", Color(Catppuccin.Mocha.Peach.rgba)).dependsOn { highlight.value }
+    private val color by config.colorPicker("Color", Color(Catppuccin.Mocha.Peach.argb, true)).dependsOn { highlight.value }
 
     private val hud = config.hud("Kuudra HP") {
         if (it) return@hud sizedText("§a46.5m§7/§4240m §c❤")

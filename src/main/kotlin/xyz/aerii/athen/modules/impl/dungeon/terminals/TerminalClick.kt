@@ -35,8 +35,8 @@ object TerminalClick : Module(
 
     private val radius by config.slider("Radius", 4, 1, 10)
     private val thickness by config.slider("Thickness", 2, 1, 10)
-    private val `color$mouse$left` by config.colorPicker("Left mouse color", Color(Catppuccin.Mocha.Mauve.argb))
-    private val `color$mouse$right` by config.colorPicker("Right mouse color", Color(Catppuccin.Mocha.Peach.argb))
+    private val `color$mouse$left` by config.colorPicker("Left mouse color", Color(Catppuccin.Mocha.Mauve.argb, true))
+    private val `color$mouse$right` by config.colorPicker("Right mouse color", Color(Catppuccin.Mocha.Peach.argb, true))
 
     init {
         on<GuiEvent.Input.Mouse.Press> {

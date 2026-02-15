@@ -23,7 +23,7 @@ object BuildInfo : Module(
     Category.KUUDRA
 ) {
     private val waypoints = config.switch("Unfinished build waypoint", true).custom("waypoints")
-    private val color by config.colorPicker("Color", Color(Catppuccin.Mocha.Red.rgba, true))
+    private val color by config.colorPicker("Color", Color(Catppuccin.Mocha.Red.argb, true))
 
     private val render: Boolean
         get() = KuudraAPI.inRun && KuudraAPI.phase == KuudraPhase.BUILD
