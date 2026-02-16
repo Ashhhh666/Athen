@@ -21,6 +21,7 @@ import xyz.aerii.athen.api.dungeon.terminals.TerminalType
 import xyz.aerii.athen.events.PacketEvent
 import xyz.aerii.athen.handlers.Chronos
 import xyz.aerii.athen.handlers.Smoothie.client
+import xyz.aerii.athen.handlers.Smoothie.mainThread
 import xyz.aerii.athen.handlers.Texter.literal
 import xyz.aerii.athen.modules.impl.dungeon.terminals.simulator.TerminalSimulator
 import xyz.aerii.athen.utils.EMPTY_COMPONENT
@@ -48,8 +49,8 @@ abstract class ITerminalSim(
     }
 
     open fun a() {
-        client.execute {
-            McClient.setScreen(this)
+        mainThread {
+            McClient.setScreen(this@ITerminalSim)
             TerminalSimulator.s.value = true
         }
     }

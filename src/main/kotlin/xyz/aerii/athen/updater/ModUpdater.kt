@@ -9,7 +9,7 @@ import net.minecraft.SharedConstants
 import tech.thatgravyboat.skyblockapi.helpers.McClient
 import xyz.aerii.athen.Athen
 import xyz.aerii.athen.annotations.Priority
-import xyz.aerii.athen.handlers.Smoothie.client
+import xyz.aerii.athen.handlers.Smoothie.mainThread
 import xyz.aerii.athen.handlers.Typo.PrefixType
 import xyz.aerii.athen.handlers.Typo.modMessage
 import xyz.aerii.athen.modules.impl.Dev
@@ -62,7 +62,7 @@ object ModUpdater {
                 "Run /${Athen.modId} update to install".modMessage()
 
                 if (newVersion != skippedVersion) {
-                    client.execute {
+                    mainThread {
                         McClient.setScreen(UpdateGUI(
                             Athen.modVersion,
                             newVersion,

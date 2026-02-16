@@ -9,8 +9,8 @@ import xyz.aerii.athen.annotations.OnlyIn
 import xyz.aerii.athen.api.location.SkyBlockIsland
 import xyz.aerii.athen.config.Category
 import xyz.aerii.athen.handlers.Smoothie.alert
-import xyz.aerii.athen.handlers.Smoothie.client
 import xyz.aerii.athen.handlers.Smoothie.level
+import xyz.aerii.athen.handlers.Smoothie.mainThread
 import xyz.aerii.athen.handlers.Texter.parse
 import xyz.aerii.athen.handlers.Typo.modMessage
 import xyz.aerii.athen.handlers.Typo.stripped
@@ -29,7 +29,7 @@ object RareItemAlert : Module(
             if ("Skeleton Master Chestplate" !in entity.item.displayName.stripped()) return@onReceive
             if (entity.item?.getData(DataTypes.DUNGEON_QUALITY) != 50) return@onReceive
 
-            client.execute {
+            mainThread {
                 "<red>Rare drop! <yellow>Skeleton Master Chestplate <gray>[Quality=50]".parse().modMessage()
                 "<red>Rare drop!".parse().alert()
             }

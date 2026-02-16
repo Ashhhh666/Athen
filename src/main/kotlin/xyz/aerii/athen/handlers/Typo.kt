@@ -4,6 +4,7 @@ import net.minecraft.client.gui.components.ChatComponent
 import net.minecraft.network.chat.Component
 import tech.thatgravyboat.skyblockapi.helpers.McClient
 import xyz.aerii.athen.handlers.Smoothie.client
+import xyz.aerii.athen.handlers.Smoothie.mainThread
 import xyz.aerii.athen.handlers.Texter.literal
 import xyz.aerii.athen.modules.impl.Dev
 import kotlin.math.roundToInt
@@ -70,13 +71,13 @@ object Typo {
     @JvmStatic
     fun String.lie() {
         @Suppress("UNNECESSARY_SAFE_CALL") // gui can be null, why the fuck does it say that it can't be null
-        client.execute { client.gui?.chat?.addMessage(this.literal()) }
+        mainThread { gui?.chat?.addMessage(this@lie.literal()) }
     }
 
     @JvmStatic
     fun Component.lie() {
         @Suppress("UNNECESSARY_SAFE_CALL")
-        client.execute { client.gui?.chat?.addMessage(this) }
+        mainThread { gui?.chat?.addMessage(this@lie) }
     }
 
     @JvmStatic

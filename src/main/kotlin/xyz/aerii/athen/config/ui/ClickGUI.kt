@@ -19,6 +19,7 @@ import xyz.aerii.athen.handlers.Scurry.isAreaHovered
 import xyz.aerii.athen.handlers.Scurry.rawX
 import xyz.aerii.athen.handlers.Scurry.rawY
 import xyz.aerii.athen.handlers.Smoothie.client
+import xyz.aerii.athen.handlers.Smoothie.mainThread
 import xyz.aerii.athen.ui.themes.Catppuccin.Mocha
 import xyz.aerii.athen.utils.nvg.Image
 import xyz.aerii.athen.utils.nvg.NVGRenderer
@@ -45,7 +46,7 @@ object ClickGUI : Scram("Config [Click UI - Athen]") {
     init {
         Roulette.scope.launch {
             Roulette.download.await()
-            client.execute {
+            mainThread {
                 closeIcon = NVGRenderer.createImage(Roulette.file("elements/close.svg").path, Mocha.Subtext0.argb)
                 discordIcon = NVGRenderer.createImage(Roulette.file("elements/discord.svg").path, Mocha.Text.argb)
             }

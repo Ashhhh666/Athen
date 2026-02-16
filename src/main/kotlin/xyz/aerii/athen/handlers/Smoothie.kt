@@ -33,6 +33,10 @@ object Smoothie {
     val heldItem: ItemStack?
         get() = player?.mainHandItem
 
+    inline fun mainThread(crossinline block: Minecraft.() -> Unit) {
+        client.execute { client.block() }
+    }
+
     @JvmStatic
     @JvmOverloads
     fun SoundEvent.play(volume: Float = 1f, pitch: Float = 1f) {

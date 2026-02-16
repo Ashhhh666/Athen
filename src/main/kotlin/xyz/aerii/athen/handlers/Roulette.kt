@@ -14,7 +14,7 @@ import xyz.aerii.athen.Athen
 import xyz.aerii.athen.annotations.Priority
 import xyz.aerii.athen.events.LocationEvent
 import xyz.aerii.athen.events.core.EventBus.on
-import xyz.aerii.athen.handlers.Smoothie.client
+import xyz.aerii.athen.handlers.Smoothie.mainThread
 import xyz.aerii.athen.handlers.Typo.modMessage
 import xyz.aerii.athen.modules.impl.Dev
 import java.io.File
@@ -92,13 +92,13 @@ object Roulette {
         }
     }
 
-    private fun registerTexture(cachedFile: File, location: ResourceLocation, path: String) = client.execute {
+    private fun registerTexture(cachedFile: File, location: ResourceLocation, path: String) = mainThread {
         runCatching {
             val texture = DynamicTexture(
                 { cachedFile.path },
                 NativeImage.read(cachedFile.inputStream())
             )
-            client.textureManager.register(location, texture)
+            textureManager.register(location, texture)
         }.onFailure {
             Athen.LOGGER.error("Failed to register texture $location", it)
         }

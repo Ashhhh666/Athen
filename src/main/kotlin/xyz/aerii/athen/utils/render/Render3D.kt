@@ -43,7 +43,6 @@ import com.mojang.blaze3d.vertex.PoseStack
 import dev.deftu.omnicore.api.client.render.stack.OmniPoseStack
 import dev.deftu.omnicore.api.client.render.stack.OmniPoseStacks
 import dev.deftu.omnicore.api.client.render.vertex.OmniBufferBuilder
-import dev.deftu.omnicore.api.client.render.vertex.OmniBufferBuilders
 import net.minecraft.client.gui.Font
 import net.minecraft.client.renderer.LightTexture
 import net.minecraft.client.renderer.MultiBufferSource

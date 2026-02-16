@@ -27,7 +27,7 @@ import tech.thatgravyboat.skyblockapi.api.events.screen.PlayerHotbarChangeEvent
 import xyz.aerii.athen.annotations.Priority
 import xyz.aerii.athen.events.*
 import xyz.aerii.athen.events.core.onReceive
-import xyz.aerii.athen.handlers.Smoothie.client
+import xyz.aerii.athen.handlers.Smoothie.mainThread
 import xyz.aerii.athen.utils.nvg.NVGSpecialRenderer
 import kotlin.jvm.optionals.getOrNull
 
@@ -108,7 +108,7 @@ object Signal {
         }
 
         onReceive<ClientboundSystemChatPacket> {
-            client.execute { if (ChatEvent(content, overlay).post()) it.cancel() }
+            mainThread { if (ChatEvent(content, this@onReceive.overlay).post()) it.cancel() }
         }
     }
 
