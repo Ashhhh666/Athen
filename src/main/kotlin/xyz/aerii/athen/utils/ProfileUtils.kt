@@ -51,12 +51,13 @@ data class PlayerStats(
 )
 
 fun fetchPlayerStats(
-    uuid: String,
     username: String,
+    include: Set<String> = emptySet(),
     onSuccess: (PlayerStats) -> Unit,
     onError: ((Throwable) -> Unit)? = null
 ) {
-    Beacon.get("$apiUrl/stats/$uuid", false) {
+    val str = if (include.isNotEmpty()) "&include=${include.joinToString(",")}" else ""
+    Beacon.get("$apiUrl/stats?names=$username$str&gzip=true", true) {
         onJsonSuccess { json ->
             onSuccess(json.parseProfile().toPlayerStats())
         }
@@ -64,6 +65,34 @@ fun fetchPlayerStats(
         onError {
             Athen.LOGGER.error("Failed to fetch stats for $username", it)
             onError?.invoke(it) ?: onSuccess(PlayerStats(loading = false))
+        }
+    }
+}
+
+fun fetchPlayerStats(
+    names: List<String>,
+    include: Set<String> = emptySet(),
+    onSuccess: (Map<String, PlayerStats>) -> Unit,
+    onError: ((Throwable) -> Unit)? = null
+) {
+    val joined = names.joinToString(",")
+    val str = if (include.isNotEmpty()) "&include=${include.joinToString(",")}" else ""
+    Beacon.get("$apiUrl/stats?names=$joined$str&gzip=true", true) {
+        onJsonSuccess { json ->
+            val result = buildMap {
+                for ((name, element) in json.entrySet()) {
+                    val obj = element.asJsonObject
+                    if (obj.has("error")) put(name, PlayerStats(loading = false))
+                    else put(name, obj.parseProfile().toPlayerStats())
+                }
+            }
+
+            onSuccess(result)
+        }
+
+        onError {
+            Athen.LOGGER.error("Failed to batch fetch stats for $names", it)
+            onError?.invoke(it) ?: onSuccess(names.associateWith { PlayerStats(loading = false) })
         }
     }
 }

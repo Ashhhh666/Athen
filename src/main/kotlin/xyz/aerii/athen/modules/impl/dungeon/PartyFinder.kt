@@ -8,12 +8,10 @@ import net.minecraft.network.protocol.game.ClientboundContainerClosePacket
 import net.minecraft.network.protocol.game.ClientboundContainerSetContentPacket
 import net.minecraft.network.protocol.game.ClientboundOpenScreenPacket
 import net.minecraft.network.protocol.game.ServerboundContainerClosePacket
-import net.minecraft.world.inventory.Slot
 import net.minecraft.world.item.Items
 import net.minecraft.world.item.component.ItemLore
 import tech.thatgravyboat.skyblockapi.api.profile.party.PartyAPI
 import tech.thatgravyboat.skyblockapi.api.profile.party.PartyFinderAPI
-import tech.thatgravyboat.skyblockapi.utils.extentions.getHoveredSlot
 import tech.thatgravyboat.skyblockapi.utils.extentions.getLore
 import tech.thatgravyboat.skyblockapi.utils.extentions.getRawLore
 import tech.thatgravyboat.skyblockapi.utils.extentions.parseRomanNumeral
@@ -29,18 +27,17 @@ import xyz.aerii.athen.config.Category
 import xyz.aerii.athen.events.ChatEvent
 import xyz.aerii.athen.events.CommandRegistration
 import xyz.aerii.athen.events.GuiEvent
-import xyz.aerii.athen.events.TickEvent
 import xyz.aerii.athen.events.core.runWhen
 import xyz.aerii.athen.handlers.Chronos
 import xyz.aerii.athen.handlers.Notifier.notify
 import xyz.aerii.athen.handlers.Smoothie
+import xyz.aerii.athen.handlers.Smoothie.client
+import xyz.aerii.athen.handlers.Smoothie.mainThread
 import xyz.aerii.athen.handlers.Texter.literal
 import xyz.aerii.athen.handlers.Texter.onHover
 import xyz.aerii.athen.handlers.Texter.parse
-import xyz.aerii.athen.handlers.Typo
 import xyz.aerii.athen.handlers.Typo.command
 import xyz.aerii.athen.handlers.Typo.lie
-import xyz.aerii.athen.handlers.Typo.modMessage
 import xyz.aerii.athen.handlers.Typo.repeatBreak
 import xyz.aerii.athen.handlers.Typo.stripped
 import xyz.aerii.athen.modules.Module
@@ -67,15 +64,10 @@ object PartyFinder : Module(
     private var inPartyFinder = false
     private var inMainGate = false
     private var currentClass: String? = null
-    private var currentlyHovered: Slot? = null
-    private var lastHovered: Slot? = null
-    private var hoverTicks = 0
-    private var yearn = false
 
-    private val trackedSlots = mutableSetOf<Int>()
     private val slotData = mutableMapOf<Int, PartyData>()
+    private val pfCache = mutableMapOf<String, CachedStats>()
     private val statsCache = mutableMapOf<String, CachedStats>()
-    private val yearning = mutableSetOf<String>()
 
     private val showStats = config.switch("Show stats").custom("showStats")
     private val statsToShow by config.multiCheckbox("Stats to show", listOf("Class level", "Cata level", "Secrets", "Secret average", "Personal best", "Missing classes"), listOf(0, 1, 2, 3, 4, 5)).dependsOn { showStats.value }
@@ -116,8 +108,7 @@ object PartyFinder : Module(
 
     private data class PartyMember(
         val username: String,
-        val className: String,
-        var uuid: String? = null
+        val className: String
     )
 
     private data class PartyData(
@@ -144,16 +135,23 @@ object PartyFinder : Module(
     init {
         Chronos.Time every 1.hours repeat {
             val now = System.currentTimeMillis()
-            statsCache.entries.removeIf { (_, cached) ->
-                now - cached.storedAt > 1.hours.inWholeMicroseconds
-            }
+            pfCache.entries.removeIf { (_, cached) -> now - cached.storedAt > 1.hours.inWholeMicroseconds }
+            statsCache.entries.removeIf { (_, cached) -> now - cached.storedAt > 1.hours.inWholeMicroseconds }
         }
 
         on<CommandRegistration> {
             event.register(Athen.modId) {
                 then("stats") {
                     thenCallback("username", StringArgumentType.word()) {
-                        StringArgumentType.getString(this, "username")?.printStats()
+                        val username = StringArgumentType.getString(this, "username")
+
+                        val cached = statsCache[username]
+                        if (cached != null && !cached.stats.loading) return@thenCallback cached.stats.stats(username)
+
+                        fetchPlayerStats(username, setOf("armor_data", "talisman_bag_data"), onSuccess = { stats ->
+                            statsCache[username] = CachedStats(stats)
+                            stats.stats(username)
+                        })
                     }
                 }
             }
@@ -164,7 +162,7 @@ object PartyFinder : Module(
             if (!joinStats && !canKick) return@on
 
             val username = pfJoinRegex.findGroup(message.stripped(), "name") ?: return@on
-            if (username == Smoothie.client.player?.name?.string) return@on
+            if (username == client.player?.name?.string) return@on
 
             val cached = statsCache[username]
             if (cached != null && !cached.stats.loading) {
@@ -173,53 +171,13 @@ object PartyFinder : Module(
                 return@on
             }
 
-            statsCache[username] = CachedStats(PlayerStats())
+            fetchPlayerStats(username, setOf("armor_data", "talisman_bag_data"), onSuccess = { stats ->
+                statsCache[username] = CachedStats(stats)
 
-            UUIDUtils.getUUID(username) { uuid ->
-                val uuid = uuid ?: return@getUUID
-                fetchPlayerStats(uuid, username, onSuccess = { stats ->
-                    statsCache[username] = CachedStats(stats)
-
-                    if (joinStats) stats.stats(username)
-                    if (canKick) stats.kick(username)
-                })
-            }
+                if (joinStats) stats.stats(username)
+                if (canKick) stats.kick(username)
+            })
         }
-
-        on<GuiEvent.Tooltip.Render> {
-            if (inPartyFinder) currentlyHovered = (Smoothie.client.screen as? AbstractContainerScreen<*>)?.getHoveredSlot()
-        }.runWhen(showStats.state)
-
-        on<TickEvent.Client> {
-            if (!inPartyFinder) return@on
-
-            val hovered = currentlyHovered ?: return@on
-            if (hovered != lastHovered) {
-                hoverTicks = 0
-                yearn = false
-                lastHovered = hovered
-                return@on
-            }
-
-            if (++hoverTicks < 10) return@on // hopefully my api survives
-            if (yearn) return@on
-
-            yearn = true
-            val data = slotData[hovered.index] ?: return@on
-
-            for (member in data.members) {
-                val username = member.username
-                if (statsCache[username] != null) continue
-
-                member.uuid?.let {
-                    hovered.requestStats(it, username, data.floor, data.isMaster)
-                } ?: UUIDUtils.getUUID(username) { uuid ->
-                    val uuid = uuid ?: return@getUUID
-                    member.uuid = uuid
-                    hovered.requestStats(uuid, username, data.floor, data.isMaster)
-                }
-            }
-        }.runWhen(showStats.state)
 
         on<GuiEvent.Slots.Render.Pre> {
             if (!inPartyFinder) return@on
@@ -248,8 +206,6 @@ object PartyFinder : Module(
             val stripped = title.stripped()
             inPartyFinder = stripped == "Party Finder"
             inMainGate = stripped == "Catacombs Gate"
-
-            if (!inPartyFinder) trackedSlots.clear()
         }
 
         onReceive<ClientboundContainerClosePacket> {
@@ -283,6 +239,8 @@ object PartyFinder : Module(
             }
 
             slotData.clear()
+            val all = mutableSetOf<String>()
+
             for ((i, it) in items.withIndex()) {
                 if (i >= 54) break
                 if (it == null) continue
@@ -319,6 +277,7 @@ object PartyFinder : Module(
                     nameRegex.findThenNull(l, "username", "className") { (user, cls) ->
                         foundClasses += cls
                         members += PartyMember(user, cls)
+                        all += user
                     }
                 }
 
@@ -342,16 +301,31 @@ object PartyFinder : Module(
                 slotData[i] = PartyData(floor, master, members, status, special)
                 it.set(DataComponents.LORE, ItemLore(lore.buildLore(floor, master, foundClasses)))
             }
+
+            if (!showStats.value) return@onReceive
+            if (all.isEmpty()) return@onReceive
+
+            val names = all.filter { pfCache[it] == null }.takeIf { it.isNotEmpty() } ?: return@onReceive lore()
+            fetchPlayerStats(names, onSuccess = { results ->
+                for ((u, s) in results) pfCache[u] = CachedStats(s)
+                mainThread { lore() }
+            })
         }
     }
 
-    private fun String.printStats() {
-        val cached = statsCache[this]
-        if (cached != null && !cached.stats.loading) return cached.stats.stats(this)
+    private fun lore() {
+        val screen = client.screen as? AbstractContainerScreen<*> ?: return
 
-        UUIDUtils.getUUID(this) { uuid ->
-            val uuid = uuid ?: return@getUUID
-            null.requestStats(uuid, this, sendToChat = true)
+        for ((i, d) in slotData) {
+            val slot = screen.menu.slots.getOrNull(i) ?: continue
+            val item = slot.item
+            if (item.item != Items.PLAYER_HEAD) continue
+
+            val lore = item.getLore()
+            val foundClasses = d.members.map { it.className }.toSet()
+            val finalLore = lore.buildLore(d.floor, d.isMaster, foundClasses, false)
+
+            item.set(DataComponents.LORE, ItemLore(finalLore))
         }
     }
 
@@ -409,21 +383,6 @@ object PartyFinder : Module(
         }
     }
 
-    private fun Slot?.requestStats(uuid: String, username: String, floor: Int? = null, master: Boolean? = null, sendToChat: Boolean = false) {
-        if (!yearning.add(username)) return "Already fetching for user $username!".modMessage(Typo.PrefixType.ERROR)
-        statsCache[username] = CachedStats(PlayerStats())
-
-        fetchPlayerStats(uuid, username, onSuccess = { stats ->
-            statsCache[username] = CachedStats(stats)
-            yearning.remove(username)
-            if (sendToChat) stats.stats(username)
-            if (this == null) return@fetchPlayerStats
-            val data = slotData[index] ?: return@fetchPlayerStats
-
-            updateLore(data, floor!!, master!!)
-        })
-    }
-
     private fun PlayerStats.stats(username: String) {
         val floor = PartyFinderAPI.queuedDungeonFloor
         var floorDisplay: String
@@ -467,83 +426,18 @@ object PartyFinder : Module(
                 for (p in pieces) {
                     val lore = p.lore ?: continue
                     val hover = p.name + "\n" + lore.joinToString("\n")
+                    val str = when (p.index) {
+                        3 -> "⛑"
+                        2 -> "👕"
+                        1 -> "👖"
+                        else -> "👢"
+                    }
 
-                    "    §8[${p.index.name()}§8] ${p.name}".literal().onHover(hover).lie()
+                    "    §8[$str§8] ${p.name}".literal().onHover(hover).lie()
                 }
             }
 
         "§8§m${"-".repeatBreak()}".lie()
-    }
-
-    private fun Long?.time(): String =
-        this?.let { (it / 1000.0).toMS() } ?: "No S+"
-
-    private fun Int.name(): String {
-        return when (this) {
-            3 -> "⛑"
-            2 -> "👕"
-            1 -> "👖"
-            else -> "👢"
-        }
-    }
-
-    private fun Slot.updateLore(data: PartyData, floor: Int, master: Boolean) {
-        if (item.item != Items.PLAYER_HEAD) return
-
-        val lore = item.getLore()
-        val foundClasses = data.members.map { it.className }.toSet()
-        val finalLore = lore.buildLore(floor, master, foundClasses, false)
-
-        item.set(DataComponents.LORE, ItemLore(finalLore))
-    }
-
-    private fun List<Component>.buildLore(floor: Int, master: Boolean, foundClasses: Set<String>, setClasses: Boolean = true): List<Component> {
-        val lore = map { line ->
-            if (!showStats.value) return@map line
-
-            val stripped = line.stripped()
-            var updatedLine = line
-
-            nameRegex.findThenNull(stripped, "username", "className", "classLevel") { (username, clsN, clsL) ->
-                statsCache[username]?.takeIf { !it.stats.loading }?.let { stats ->
-                    updatedLine = stats.stats.buildLine(floor, master, username, line.get(), clsN, clsL.toInt())
-                }
-            }
-
-            updatedLine
-        }.toMutableList()
-
-        if (setClasses && 5 in statsToShow) lore.add(foundClasses.buildLine())
-        return lore
-    }
-
-    private fun Component.get(): Int? {
-        val s = siblings
-        var prev: Component? = null
-
-        for (c in s) {
-            if (c.string == ": ") return prev?.style?.color?.value
-            prev = c
-        }
-
-        return null
-    }
-
-    private fun Set<String>.buildLine(): Component {
-        var root = "<${TextColor.RED}>Missing: "
-
-        var first = true
-        for (cls in ClassType.fullNames) {
-            if (cls in this) continue
-
-            if (!first) root += " <gray>| "
-            first = false
-
-            val color = if (cls == currentClass) Catppuccin.Mocha.Teal.argb else Catppuccin.Mocha.Red.argb
-            root += "<$color>$cls"
-        }
-
-        return root.parse().apply { italic = false }
     }
 
     private fun PlayerStats.buildLine(floor: Int, master: Boolean, username: String, usernameColor: Int?, className: String, classLevel: Int): Component {
@@ -588,14 +482,62 @@ object PartyFinder : Module(
         return "<${usernameColor ?: "aqua"}> $username$extra".parse().apply { italic = false }
     }
 
+    private fun List<Component>.buildLore(floor: Int, master: Boolean, foundClasses: Set<String>, setClasses: Boolean = true): List<Component> {
+        val lore = map { line ->
+            if (!showStats.value) return@map line
+
+            val stripped = line.stripped()
+            var updatedLine = line
+
+            nameRegex.findThenNull(stripped, "username", "className", "classLevel") { (username, clsN, clsL) ->
+                pfCache[username]?.takeIf { !it.stats.loading }?.let { stats ->
+                    updatedLine = stats.stats.buildLine(floor, master, username, line.get(), clsN, clsL.toInt())
+                }
+            }
+
+            updatedLine
+        }.toMutableList()
+
+        if (setClasses && 5 in statsToShow) lore.add(foundClasses.buildLine())
+        return lore
+    }
+
+    private fun Set<String>.buildLine(): Component {
+        var root = "<${TextColor.RED}>Missing: "
+
+        var first = true
+        for (cls in ClassType.fullNames) {
+            if (cls in this) continue
+
+            if (!first) root += " <gray>| "
+            first = false
+
+            val color = if (cls == currentClass) Catppuccin.Mocha.Teal.argb else Catppuccin.Mocha.Red.argb
+            root += "<$color>$cls"
+        }
+
+        return root.parse().apply { italic = false }
+    }
+
+    private fun Component.get(): Int? {
+        val s = siblings
+        var prev: Component? = null
+
+        for (c in s) {
+            if (c.string == ": ") return prev?.style?.color?.value
+            prev = c
+        }
+
+        return null
+    }
+
+    private fun Long?.time(): String =
+        this?.let { (it / 1000.0).toMS() } ?: "No S+"
+
     private fun reset() {
         when {
             inPartyFinder -> {
                 inPartyFinder = false
-                currentlyHovered = null
-                lastHovered = null
-                yearn = false
-                trackedSlots.clear()
                 slotData.clear()
             }
 

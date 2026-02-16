@@ -10,6 +10,7 @@ import java.io.File
 import java.net.HttpURLConnection
 import java.net.SocketTimeoutException
 import java.net.URI
+import java.util.zip.GZIPInputStream
 
 object Beacon {
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
@@ -167,7 +168,8 @@ object Beacon {
                 val statusCode = connection.responseCode
 
                 if (statusCode in 200..299) {
-                    val response = connection.inputStream.bufferedReader().use { it.readText() }
+                    val inp = connection.inputStream
+                    val response = (if ("gzip=true" in url) GZIPInputStream(inp) else inp).bufferedReader().use { it.readText() }
                     if (log) Athen.LOGGER.info("Success in $method for $url → $statusCode (${response.length} bytes)")
                     onSuccess(response)
                     response
