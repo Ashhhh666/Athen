@@ -49,7 +49,7 @@ class ConfigBuilder(
 
     fun colorPicker(name: String, default: Color = Color(0, 255, 255, 127)) = option(default, ConfigManager.ElementData.ColorPicker(name, "", default))
 
-    fun keybind(name: String, default: Int = 0) = option(default, ConfigManager.ElementData.Keybind(name, "", default))
+    fun keybind(name: String, default: Int = -1) = option(default, ConfigManager.ElementData.Keybind(name, "", default))
 
     fun multiCheckbox(name: String, options: List<String>, default: List<Int> = emptyList()) = option(default, ConfigManager.ElementData.MultiCheckbox(name, "", options, default))
 

@@ -73,7 +73,7 @@ class KeybindElement(
 
         when (keyCode) {
             GLFW.GLFW_KEY_ESCAPE -> listening = false
-            GLFW.GLFW_KEY_BACKSPACE -> setKey(0)
+            GLFW.GLFW_KEY_BACKSPACE -> setKey(-1)
             GLFW.GLFW_KEY_ENTER -> listening = false
             else -> setKey(keyCode)
         }
@@ -90,7 +90,7 @@ class KeybindElement(
     }
 
     private fun getKeyName(keyCode: Int) = when (keyCode) {
-        0 -> "None"
+        -1 -> "None"
         in -100..-1 -> "Mouse ${keyCode + 100}"
         else -> InputConstants.Type.KEYSYM.getOrCreate(keyCode).displayName.string.let {
             if (it.length == 1) it.uppercase() else it

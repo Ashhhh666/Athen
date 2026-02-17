@@ -1,5 +1,8 @@
 package xyz.aerii.athen.utils
 
+import dev.deftu.omnicore.api.client.input.OmniKeyboard
+import dev.deftu.omnicore.api.client.input.OmniMouse
+
 @JvmName("timesIntPair")
 operator fun Pair<Int, Int>.times(k: Number): Pair<Int, Int> =
     (first * k.toDouble()).toInt() to (second * k.toDouble()).toInt()
@@ -11,6 +14,13 @@ operator fun Pair<Float, Float>.times(k: Number): Pair<Float, Float> =
 @JvmName("timesDoublePair")
 operator fun Pair<Double, Double>.times(k: Number): Pair<Double, Double> =
     first * k.toDouble() to second * k.toDouble()
+
+private val ignoreSet = setOf(0, -1)
+
+fun Int.isPressed(): Boolean {
+    if (this in ignoreSet) return false
+    return if (this > 0) OmniKeyboard.isPressed(this) else OmniMouse.isPressed(this)
+}
 
 /**
  * Abbreviates large numbers with K, M, B suffixes.

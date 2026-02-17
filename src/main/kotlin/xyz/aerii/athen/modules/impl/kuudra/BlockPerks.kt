@@ -1,6 +1,5 @@
 package xyz.aerii.athen.modules.impl.kuudra
 
-import dev.deftu.omnicore.api.client.input.OmniKeyboard
 import net.minecraft.network.protocol.game.ClientboundContainerClosePacket
 import net.minecraft.network.protocol.game.ClientboundOpenScreenPacket
 import net.minecraft.network.protocol.game.ServerboundContainerClosePacket
@@ -12,6 +11,7 @@ import xyz.aerii.athen.events.GuiEvent
 import xyz.aerii.athen.events.core.runWhen
 import xyz.aerii.athen.handlers.Typo.stripped
 import xyz.aerii.athen.modules.Module
+import xyz.aerii.athen.utils.isPressed
 
 @Load
 @OnlyIn(islands = [SkyBlockIsland.KUUDRA])
@@ -24,6 +24,7 @@ object BlockPerks : Module(
     private val crowd = listOf("Sweeping Edge", "Freezing Touch", "Bonus Damage", "Antibiotic", "Blight Slayer")
     private val specialist = listOf("Steady Hands", "Ballista Mechanic", "Bomberman", "Mining Frenzy")
     private val support = listOf("Healing Aura", "Mana Aura", "Protective Aura", "Faster Respawn")
+    private val basic = listOf("Auto Revive", "Human Cannonball", "Elle's Lava Rod", "Elle's Pickaxe")
 
     private val cancelRender = config.switch("Cancel slot render", true).custom("cancelRender")
     private val key by config.keybind("Override key")
@@ -31,8 +32,9 @@ object BlockPerks : Module(
     private val blockedExpandable by config.expandable("Blocked perks")
     private val perks0 = config.multiCheckbox("Cannoneer", cannoneer).childOf { blockedExpandable }.custom("cannoneer")
     private val perks1 = config.multiCheckbox("Crowd control", crowd).childOf { blockedExpandable }.custom("crowd")
-    private val perks2 = config.multiCheckbox("Specialist", specialist).childOf { blockedExpandable }.custom("specialist")
+    private val perks2 = config.multiCheckbox("Specialist", specialist, listOf(2, 3)).childOf { blockedExpandable }.custom("specialist")
     private val perks3 = config.multiCheckbox("Support", support).childOf { blockedExpandable }.custom("support")
+    private val perks4 = config.multiCheckbox("Basic", basic, listOf(0, 2, 3)).childOf { blockedExpandable }.custom("basic")
 
     private var blocked: Set<String> = fn()
     private var inGui: Boolean = false
@@ -57,7 +59,7 @@ object BlockPerks : Module(
 
         on<GuiEvent.Slots.Render.Pre> {
             if (!inGui) return@on
-            if (OmniKeyboard.isPressed(key)) return@on
+            if (!key.isPressed()) return@on
 
             val name = slot.item?.hoverName?.stripped()?.substringBeforeLast(" ") ?: return@on
             if (name in blocked) cancel()
@@ -65,7 +67,7 @@ object BlockPerks : Module(
 
         on<GuiEvent.Slots.Click> {
             if (!inGui) return@on
-            if (OmniKeyboard.isPressed(key)) return@on
+            if (!key.isPressed()) return@on
 
             val name = slot?.item?.hoverName?.stripped()?.substringBeforeLast(" ") ?: return@on
             if (name in blocked) cancel()
@@ -82,5 +84,6 @@ object BlockPerks : Module(
         addAll(perks1.value.map { crowd[it] })
         addAll(perks2.value.map { specialist[it] })
         addAll(perks3.value.map { support[it] })
+        addAll(perks4.value.map { basic[it] })
     }
 }

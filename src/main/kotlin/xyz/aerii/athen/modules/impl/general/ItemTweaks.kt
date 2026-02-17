@@ -2,7 +2,6 @@
 
 package xyz.aerii.athen.modules.impl.general
 
-import dev.deftu.omnicore.api.client.input.OmniKeyboard
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import net.minecraft.core.component.DataComponents
 import net.minecraft.network.chat.Component
@@ -30,6 +29,7 @@ import xyz.aerii.athen.handlers.Typo.stripped
 import xyz.aerii.athen.modules.Module
 import xyz.aerii.athen.utils.abbreviate
 import xyz.aerii.athen.utils.formatted
+import xyz.aerii.athen.utils.isPressed
 import xyz.aerii.athen.utils.render.Render2D.sizedText
 import xyz.aerii.athen.utils.toDurationFromMillis
 import java.time.Instant
@@ -119,17 +119,17 @@ object ItemTweaks : Module(
         }
 
         on<GuiEvent.Input.Key.Press> {
-            if (`showItemHex$keybind` == 0) return@on
+            if (`showItemHex$keybind` == -1) return@on
             if (`showItemHex$keybind` == keyEvent.key()) (client.screen as? AbstractContainerScreen<*>)?.getHoveredSlot()?.item?.invalidate()
         }.runWhen(showItemHex.state)
 
         on<GuiEvent.Input.Key.Release> {
-            if (`showItemHex$keybind` == 0) return@on
+            if (`showItemHex$keybind` == -1) return@on
             if (`showItemHex$keybind` == keyEvent.key()) (client.screen as? AbstractContainerScreen<*>)?.getHoveredSlot()?.item?.invalidate()
         }.runWhen(showItemHex.state)
 
         on<GuiEvent.Tooltip.Update> {
-            if (`showItemHex$keybind` != 0 && !OmniKeyboard.isPressed(`showItemHex$keybind`)) return@on
+            if (!`showItemHex$keybind`.isPressed()) return@on
 
             val rgb = item.get(DataComponents.DYED_COLOR)?.rgb ?: return@on
             tooltip.add(1, rgb.hex())
