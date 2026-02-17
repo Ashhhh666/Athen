@@ -44,7 +44,7 @@ abstract class ITerminalSim(
 
     override fun init() {
         super.init()
-        PacketEvent.Process(ClientboundOpenScreenPacket(id++, type.g(), component)).post()
+        PacketEvent.Process.Pre(ClientboundOpenScreenPacket(id++, type.g(), component)).post()
         critter()
     }
 
@@ -57,7 +57,7 @@ abstract class ITerminalSim(
 
     override fun onClose() {
         c = true
-        PacketEvent.Process(ClientboundContainerClosePacket(id - 1)).post()
+        PacketEvent.Process.Pre(ClientboundContainerClosePacket(id - 1)).post()
         TerminalSimulator.s.value = false
         super.onClose()
     }
@@ -70,8 +70,8 @@ abstract class ITerminalSim(
         for (a in slots) a.set(pane)
         for ((a, b) in s()) slots.getOrNull(a)?.set(b)
         val i = slots.map { it.item }
-        PacketEvent.Process(ClientboundContainerSetContentPacket(id - 1, 0, i, ItemStack.EMPTY)).post()
-        for ((a, b) in i.withIndex()) if (b.item != Items.BLACK_STAINED_GLASS_PANE) PacketEvent.Process(ClientboundContainerSetSlotPacket(id - 1, 0, a, b)).post()
+        PacketEvent.Process.Pre(ClientboundContainerSetContentPacket(id - 1, 0, i, ItemStack.EMPTY)).post()
+        for ((a, b) in i.withIndex()) if (b.item != Items.BLACK_STAINED_GLASS_PANE) PacketEvent.Process.Pre(ClientboundContainerSetSlotPacket(id - 1, 0, a, b)).post()
     }
 
     //? if >= 1.21.11 {
@@ -96,7 +96,7 @@ abstract class ITerminalSim(
     protected fun Map<Int, ItemStack>.a() {
         for ((i, it) in this) {
             slots.getOrNull(i)?.set(it)
-            PacketEvent.Process(ClientboundContainerSetSlotPacket(id - 1, 0, i, it)).post()
+            PacketEvent.Process.Pre(ClientboundContainerSetSlotPacket(id - 1, 0, i, it)).post()
         }
     }
 }

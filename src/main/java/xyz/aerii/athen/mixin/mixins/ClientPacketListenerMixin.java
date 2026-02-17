@@ -50,7 +50,8 @@ public class ClientPacketListenerMixin {
             )
     )
     private void athen$handleBundlePacket(Packet<?> packet, PacketListener listener, Operation<Void> original) {
-        if (new PacketEvent.Receive(packet).post()) return;
+        if (new PacketEvent.Process.Pre(packet).post()) return;
         original.call(packet, listener);
+        new PacketEvent.Process.Post(packet).post();
     }
 }

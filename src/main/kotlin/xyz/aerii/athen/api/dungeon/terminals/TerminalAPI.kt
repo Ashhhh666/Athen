@@ -21,7 +21,6 @@ import xyz.aerii.athen.api.dungeon.DungeonAPI
 import xyz.aerii.athen.events.DungeonEvent
 import xyz.aerii.athen.events.PacketEvent
 import xyz.aerii.athen.events.TickEvent
-import xyz.aerii.athen.events.core.EventBus.on
 import xyz.aerii.athen.events.core.on
 import xyz.aerii.athen.events.core.runWhen
 import xyz.aerii.athen.handlers.Chronos

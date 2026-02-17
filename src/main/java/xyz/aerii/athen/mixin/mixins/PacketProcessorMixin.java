@@ -17,7 +17,12 @@ public class PacketProcessorMixin {
     private Packet<?> packet;
 
     @Inject(method = "handle", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/protocol/Packet;handle(Lnet/minecraft/network/PacketListener;)V"), cancellable = true)
-    private void athen$handle(CallbackInfo ci) {
-        if (new PacketEvent.Process(packet).post()) ci.cancel();
+    private void athen$handle$pre(CallbackInfo ci) {
+        if (new PacketEvent.Process.Pre(packet).post()) ci.cancel();
+    }
+
+    @Inject(method = "handle", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/protocol/Packet;handle(Lnet/minecraft/network/PacketListener;)V", shift = At.Shift.AFTER), cancellable = true)
+    private void athen$handle$post(CallbackInfo ci) {
+        if (new PacketEvent.Process.Post(packet).post()) ci.cancel();
     }
 }
