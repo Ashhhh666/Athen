@@ -10,7 +10,7 @@ import xyz.aerii.athen.annotations.Load
 import xyz.aerii.athen.config.ui.ClickGUI
 import xyz.aerii.athen.events.ChatEvent
 import xyz.aerii.athen.events.CommandRegistration
-import xyz.aerii.athen.events.core.EventBus.on
+import xyz.aerii.athen.events.core.on
 import xyz.aerii.athen.handlers.Notifier.notify
 import xyz.aerii.athen.handlers.Smoothie.client
 import xyz.aerii.athen.handlers.Texter.literal

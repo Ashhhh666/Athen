@@ -49,7 +49,7 @@ import net.minecraft.client.renderer.MultiBufferSource
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
 import xyz.aerii.athen.events.WorldRenderEvent
-import xyz.aerii.athen.events.core.EventBus.on
+import xyz.aerii.athen.events.core.on
 import xyz.aerii.athen.handlers.Smoothie.client
 import xyz.aerii.athen.utils.render.pipelines.StarredPipelines
 import java.awt.Color

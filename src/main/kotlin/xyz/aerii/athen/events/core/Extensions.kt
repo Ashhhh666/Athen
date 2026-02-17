@@ -5,29 +5,16 @@ import xyz.aerii.athen.events.CommandRegistration
 import xyz.aerii.athen.events.PacketEvent
 import xyz.aerii.athen.handlers.React
 
-inline fun <reified P : Packet<*>> Any.onProcess(
+inline fun <reified T : Event> on(
     priority: Int = 0,
-    noinline handler: P.(PacketEvent.Process) -> Unit
-): Node<*> {
-    return EventBus.on<PacketEvent.Process> (priority) {
-        (packet as? P)?.handler(this)
-    }
-}
+    noinline handler: T.() -> Unit
+) = EventBus.on(T::class.java, priority, handler)
 
-inline fun <reified P : Packet<*>> Any.onReceive(
+inline fun <reified E : PacketEvent, reified P : Packet<*>> on(
     priority: Int = 0,
-    noinline handler: P.(PacketEvent.Receive) -> Unit
+    noinline handler: P.(E) -> Unit
 ): Node<*> {
-    return EventBus.on<PacketEvent.Receive> (priority) {
-        (packet as? P)?.handler(this)
-    }
-}
-
-inline fun <reified P : Packet<*>> Any.onSend(
-    priority: Int = 0,
-    noinline handler: P.(PacketEvent.Send) -> Unit
-): Node<*> {
-    return EventBus.on<PacketEvent.Send> (priority) {
+    return on<E>(priority) {
         (packet as? P)?.handler(this)
     }
 }

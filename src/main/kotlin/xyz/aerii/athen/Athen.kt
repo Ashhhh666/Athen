@@ -10,7 +10,7 @@ import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
 import xyz.aerii.athen.annotations.AnnotationLoader
 import xyz.aerii.athen.events.LocationEvent
-import xyz.aerii.athen.events.core.EventBus.on
+import xyz.aerii.athen.events.core.on
 import xyz.aerii.athen.handlers.*
 import xyz.aerii.athen.handlers.Texter.literal
 import xyz.aerii.athen.handlers.Texter.onHover

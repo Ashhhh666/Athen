@@ -27,6 +27,7 @@ import xyz.aerii.athen.config.Category
 import xyz.aerii.athen.events.ChatEvent
 import xyz.aerii.athen.events.CommandRegistration
 import xyz.aerii.athen.events.GuiEvent
+import xyz.aerii.athen.events.PacketEvent
 import xyz.aerii.athen.events.core.runWhen
 import xyz.aerii.athen.handlers.Chronos
 import xyz.aerii.athen.handlers.Notifier.notify
@@ -202,23 +203,23 @@ object PartyFinder : Module(
             }
         }.runWhen(highlight.state)
 
-        onReceive<ClientboundOpenScreenPacket> {
+        on<PacketEvent.Receive, ClientboundOpenScreenPacket> {
             val stripped = title.stripped()
             inPartyFinder = stripped == "Party Finder"
             inMainGate = stripped == "Catacombs Gate"
         }
 
-        onReceive<ClientboundContainerClosePacket> {
+        on<PacketEvent.Receive, ClientboundContainerClosePacket> {
             reset()
         }
 
-        onSend<ServerboundContainerClosePacket> {
+        on<PacketEvent.Send, ServerboundContainerClosePacket> {
             reset()
         }
 
-        onReceive<ClientboundContainerSetContentPacket> {
+        on<PacketEvent.Receive, ClientboundContainerSetContentPacket> {
             if (inMainGate) {
-                val rawLore = items.getOrNull(45)?.getRawLore() ?: return@onReceive
+                val rawLore = items.getOrNull(45)?.getRawLore() ?: return@on
 
                 for (l in rawLore) {
                     classRegex.findThenNull(l, "className") { (cls) ->
@@ -226,16 +227,16 @@ object PartyFinder : Module(
                     } ?: break
                 }
 
-                return@onReceive
+                return@on
             }
 
-            if (!inPartyFinder) return@onReceive
-            with (items.getOrNull(45)?.getRawLore() ?: return@onReceive) {
+            if (!inPartyFinder) return@on
+            with (items.getOrNull(45)?.getRawLore() ?: return@on) {
                 val l = this.getOrNull(1) ?: return@with
                 if (l == "defeat a Dungeon.") return@with
 
                 inPartyFinder = false
-                return@onReceive
+                return@on
             }
 
             slotData.clear()
@@ -302,10 +303,10 @@ object PartyFinder : Module(
                 it.set(DataComponents.LORE, ItemLore(lore.buildLore(floor, master, foundClasses)))
             }
 
-            if (!showStats.value) return@onReceive
-            if (all.isEmpty()) return@onReceive
+            if (!showStats.value) return@on
+            if (all.isEmpty()) return@on
 
-            val names = all.filter { pfCache[it] == null }.takeIf { it.isNotEmpty() } ?: return@onReceive lore()
+            val names = all.filter { pfCache[it] == null }.takeIf { it.isNotEmpty() } ?: return@on lore()
             fetchPlayerStats(names, onSuccess = { results ->
                 for ((u, s) in results) pfCache[u] = CachedStats(s)
                 mainThread { lore() }

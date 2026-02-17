@@ -7,10 +7,11 @@ object EventBus {
     val all = ConcurrentHashMap<Class<out Event>, CopyOnWriteArrayList<Node<out Event>>>()
     val cached = ConcurrentHashMap<Class<out Event>, Array<Node<out Event>>>()
 
-    inline fun <reified T : Event> on(
+    fun <T : Event> on(
+        eventClass: Class<T>,
         priority: Int = 0,
-        noinline handler: T.() -> Unit
-    ) = Node(T::class.java, handler, priority).handle()
+        handler: T.() -> Unit
+    ) = Node(eventClass, handler, priority).handle()
 
     @Suppress("UNCHECKED_CAST")
     fun <T : Event> post(event: T) {

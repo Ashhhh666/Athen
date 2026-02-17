@@ -41,7 +41,7 @@ import xyz.aerii.athen.annotations.Priority
 import xyz.aerii.athen.events.LocationEvent
 import xyz.aerii.athen.events.ScoreboardEvent
 import xyz.aerii.athen.events.TabListEvent
-import xyz.aerii.athen.events.core.EventBus.on
+import xyz.aerii.athen.events.core.on
 import xyz.aerii.athen.events.core.runWhen
 import xyz.aerii.athen.handlers.React
 import kotlin.time.Clock

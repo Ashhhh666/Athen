@@ -13,7 +13,7 @@ import tech.thatgravyboat.skyblockapi.utils.json.Json
 import xyz.aerii.athen.Athen
 import xyz.aerii.athen.annotations.Priority
 import xyz.aerii.athen.events.LocationEvent
-import xyz.aerii.athen.events.core.EventBus.on
+import xyz.aerii.athen.events.core.on
 import xyz.aerii.athen.handlers.Smoothie.mainThread
 import xyz.aerii.athen.handlers.Typo.modMessage
 import xyz.aerii.athen.modules.impl.Dev

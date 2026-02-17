@@ -4,7 +4,7 @@ import net.minecraft.sounds.SoundEvent
 import net.minecraft.sounds.SoundEvents
 import xyz.aerii.athen.annotations.Priority
 import xyz.aerii.athen.events.GuiEvent
-import xyz.aerii.athen.events.core.EventBus.on
+import xyz.aerii.athen.events.core.on
 import xyz.aerii.athen.handlers.Smoothie.client
 import xyz.aerii.athen.handlers.Smoothie.play
 import xyz.aerii.athen.ui.themes.Catppuccin.Mocha

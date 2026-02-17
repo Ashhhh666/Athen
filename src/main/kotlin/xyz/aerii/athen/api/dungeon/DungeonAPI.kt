@@ -45,7 +45,7 @@ import xyz.aerii.athen.api.dungeon.enums.DungeonClass
 import xyz.aerii.athen.api.dungeon.enums.DungeonPlayer
 import xyz.aerii.athen.api.location.SkyBlockIsland
 import xyz.aerii.athen.events.*
-import xyz.aerii.athen.events.core.EventBus.on
+import xyz.aerii.athen.events.core.on
 import xyz.aerii.athen.events.core.runWhen
 import xyz.aerii.athen.handlers.React
 import xyz.aerii.athen.handlers.Smoothie

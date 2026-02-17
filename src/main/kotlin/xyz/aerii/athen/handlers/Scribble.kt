@@ -12,7 +12,7 @@ import tech.thatgravyboat.skyblockapi.utils.json.Json.toData
 import tech.thatgravyboat.skyblockapi.utils.json.Json.toJson
 import xyz.aerii.athen.Athen
 import xyz.aerii.athen.events.GameEvent
-import xyz.aerii.athen.events.core.EventBus.on
+import xyz.aerii.athen.events.core.on
 import xyz.aerii.athen.utils.asJsonObjectOrNull
 import java.io.File
 import kotlin.properties.ReadWriteProperty

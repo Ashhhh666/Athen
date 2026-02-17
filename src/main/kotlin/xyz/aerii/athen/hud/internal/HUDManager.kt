@@ -7,7 +7,7 @@ import tech.thatgravyboat.skyblockapi.platform.scale
 import tech.thatgravyboat.skyblockapi.platform.translate
 import xyz.aerii.athen.annotations.Priority
 import xyz.aerii.athen.events.GuiEvent
-import xyz.aerii.athen.events.core.EventBus.on
+import xyz.aerii.athen.events.core.on
 import xyz.aerii.athen.handlers.Chronos
 import xyz.aerii.athen.handlers.Scribble
 import xyz.aerii.athen.handlers.Smoothie.client

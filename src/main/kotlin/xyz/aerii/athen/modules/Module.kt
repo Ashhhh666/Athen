@@ -9,8 +9,6 @@ import xyz.aerii.athen.config.Category
 import xyz.aerii.athen.config.ConfigBuilder
 import xyz.aerii.athen.events.PacketEvent
 import xyz.aerii.athen.events.core.Event
-import xyz.aerii.athen.events.core.EventBus
-import xyz.aerii.athen.events.core.Node
 import xyz.aerii.athen.events.core.runWhen
 import xyz.aerii.athen.handlers.React
 import xyz.aerii.athen.handlers.React.Companion.and
@@ -18,8 +16,6 @@ import xyz.aerii.athen.utils.ALWAYS_TRUE
 import xyz.aerii.athen.utils.toCamelCase
 import kotlin.reflect.full.findAnnotation
 import kotlin.reflect.full.hasAnnotation
-import xyz.aerii.athen.events.core.onReceive as onR
-import xyz.aerii.athen.events.core.onSend as onS
 
 open class Module(
     name: String? = null,
@@ -57,11 +53,13 @@ open class Module(
         }
     }
 
-    /*
-     * Basically just wrappers for ``EventBus.on``, ``Any.onReceive``, and ``Any.onSend``
-     * that automatically adds ``.runWhen()`` to only run when the Module is enabled.
-     */
-    protected inline fun <reified T : Event> on(priority: Int = 0, noinline handler: T.() -> Unit): Node<*> = EventBus.on<T>(priority, handler).runWhen(react)
-    protected inline fun <reified P : Packet<*>> onReceive(priority: Int = 0, noinline handler: P.(PacketEvent.Receive) -> Unit): Node<*> = onR<P>(priority, handler).runWhen(react)
-    protected inline fun <reified P : Packet<*>> onSend(priority: Int = 0, noinline handler: P.(PacketEvent.Send) -> Unit): Node<*> = onS<P>(priority, handler).runWhen(react)
+    protected inline fun <reified T : Event> on(
+        priority: Int = 0,
+        noinline handler: T.() -> Unit
+    ) = xyz.aerii.athen.events.core.on<T>(priority, handler).runWhen(react)
+
+    protected inline fun <reified E : PacketEvent, reified P : Packet<*>> on(
+        priority: Int = 0,
+        noinline handler: P.(E) -> Unit
+    ) = xyz.aerii.athen.events.core.on<E, P>(priority, handler).runWhen(react)
 }

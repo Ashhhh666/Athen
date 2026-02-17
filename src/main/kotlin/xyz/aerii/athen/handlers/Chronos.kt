@@ -6,7 +6,7 @@ import kotlinx.atomicfu.atomic
 import xyz.aerii.athen.Athen
 import xyz.aerii.athen.annotations.Priority
 import xyz.aerii.athen.events.TickEvent
-import xyz.aerii.athen.events.core.EventBus.on
+import xyz.aerii.athen.events.core.on
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledFuture

@@ -8,6 +8,7 @@ import xyz.aerii.athen.annotations.Load
 import xyz.aerii.athen.annotations.OnlyIn
 import xyz.aerii.athen.api.location.SkyBlockIsland
 import xyz.aerii.athen.config.Category
+import xyz.aerii.athen.events.PacketEvent
 import xyz.aerii.athen.handlers.Smoothie.alert
 import xyz.aerii.athen.handlers.Smoothie.level
 import xyz.aerii.athen.handlers.Smoothie.mainThread
@@ -24,10 +25,10 @@ object RareItemAlert : Module(
     Category.DUNGEONS
 ) {
     init {
-        onReceive<ClientboundTakeItemEntityPacket> {
-            val entity = level?.getEntity(itemId) as? ItemEntity ?: return@onReceive
-            if ("Skeleton Master Chestplate" !in entity.item.displayName.stripped()) return@onReceive
-            if (entity.item?.getData(DataTypes.DUNGEON_QUALITY) != 50) return@onReceive
+        on<PacketEvent.Receive, ClientboundTakeItemEntityPacket> {
+            val entity = level?.getEntity(itemId) as? ItemEntity ?: return@on
+            if ("Skeleton Master Chestplate" !in entity.item.displayName.stripped()) return@on
+            if (entity.item?.getData(DataTypes.DUNGEON_QUALITY) != 50) return@on
 
             mainThread {
                 "<red>Rare drop! <yellow>Skeleton Master Chestplate <gray>[Quality=50]".parse().modMessage()

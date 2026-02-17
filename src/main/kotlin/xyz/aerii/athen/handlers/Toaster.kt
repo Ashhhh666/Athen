@@ -2,7 +2,7 @@ package xyz.aerii.athen.handlers
 
 import xyz.aerii.athen.annotations.Priority
 import xyz.aerii.athen.events.GuiEvent
-import xyz.aerii.athen.events.core.EventBus.on
+import xyz.aerii.athen.events.core.on
 import xyz.aerii.athen.handlers.Smoothie.client
 import xyz.aerii.athen.ui.themes.Catppuccin.Mocha
 import xyz.aerii.athen.utils.nvg.NVGRenderer

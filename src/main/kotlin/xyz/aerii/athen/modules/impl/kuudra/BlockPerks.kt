@@ -8,6 +8,7 @@ import xyz.aerii.athen.annotations.OnlyIn
 import xyz.aerii.athen.api.location.SkyBlockIsland
 import xyz.aerii.athen.config.Category
 import xyz.aerii.athen.events.GuiEvent
+import xyz.aerii.athen.events.PacketEvent
 import xyz.aerii.athen.events.core.runWhen
 import xyz.aerii.athen.handlers.Typo.stripped
 import xyz.aerii.athen.modules.Module
@@ -45,15 +46,15 @@ object BlockPerks : Module(
         perks2.state.onChange(::r)
         perks3.state.onChange(::r)
 
-        onReceive<ClientboundOpenScreenPacket> {
+        on<PacketEvent.Receive, ClientboundOpenScreenPacket> {
             inGui = title.stripped() == "Perk Menu"
         }
 
-        onReceive<ClientboundContainerClosePacket> {
+        on<PacketEvent.Receive, ClientboundContainerClosePacket> {
             inGui = false
         }
 
-        onSend<ServerboundContainerClosePacket> {
+        on<PacketEvent.Send, ServerboundContainerClosePacket> {
             inGui = false
         }
 

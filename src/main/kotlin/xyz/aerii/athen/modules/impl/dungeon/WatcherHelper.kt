@@ -9,6 +9,7 @@ import xyz.aerii.athen.api.dungeon.DungeonAPI
 import xyz.aerii.athen.config.Category
 import xyz.aerii.athen.events.ChatEvent
 import xyz.aerii.athen.events.LocationEvent
+import xyz.aerii.athen.events.PacketEvent
 import xyz.aerii.athen.events.TickEvent
 import xyz.aerii.athen.events.core.runWhen
 import xyz.aerii.athen.handlers.Chronos
@@ -179,18 +180,18 @@ object WatcherHelper : Module(
             }
         }.runWhen(DungeonAPI.bloodOpened)
 
-        onReceive<ClientboundMoveEntityPacket> {
-            if (`blood$watcher$moved`) return@onReceive
-            if (!hasPosition()) return@onReceive
-            if (`blood$speak` == 0L) return@onReceive
-            if (System.currentTimeMillis() - `blood$speak` < 2500) return@onReceive
+        on<PacketEvent.Receive, ClientboundMoveEntityPacket> {
+            if (`blood$watcher$moved`) return@on
+            if (!hasPosition()) return@on
+            if (`blood$speak` == 0L) return@on
+            if (System.currentTimeMillis() - `blood$speak` < 2500) return@on
 
-            val l = client.level ?: return@onReceive
-            val e = getEntity(l)?.takeIf { it.displayName?.stripped()?.contains("The Watcher") == true } ?: return@onReceive
+            val l = client.level ?: return@on
+            val e = getEntity(l)?.takeIf { it.displayName?.stripped()?.contains("The Watcher") == true } ?: return@on
             val x = `blood$watcher$x` ?: e.x.also { `blood$watcher$x` = it }
             val z = `blood$watcher$z` ?: e.z.also { `blood$watcher$z` = it }
 
-            if (abs(e.x - x) <= 0.05 && abs(e.z - z) <= 0.05) return@onReceive
+            if (abs(e.x - x) <= 0.05 && abs(e.z - z) <= 0.05) return@on
 
             `blood$move` = System.currentTimeMillis()
             `blood$move$t` = Chronos.Ticker.tickServer
@@ -202,7 +203,7 @@ object WatcherHelper : Module(
             `display$move` = t.toDurationFromMillis(secondsDecimals = 1, secondsOnly = true)
             `display$move$t` = (t0 / 20.0).toDuration(secondsDecimals = 1, secondsOnly = true)
 
-            if (!move) return@onReceive
+            if (!move) return@on
 
             "Watcher moved at <red>$`display$move` <gray>($`display$move$t`)<r>!".parse().onHover("<red>$t0<white> ticks.".parse()).modMessage()
         }.runWhen(DungeonAPI.bloodOpened)

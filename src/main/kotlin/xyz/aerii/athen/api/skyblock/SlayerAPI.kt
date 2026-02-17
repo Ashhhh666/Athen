@@ -9,7 +9,7 @@ import xyz.aerii.athen.events.ChatEvent
 import xyz.aerii.athen.events.EntityEvent
 import xyz.aerii.athen.events.LocationEvent
 import xyz.aerii.athen.events.SlayerEvent
-import xyz.aerii.athen.events.core.EventBus.on
+import xyz.aerii.athen.events.core.on
 import xyz.aerii.athen.handlers.Typo.devMessage
 import xyz.aerii.athen.handlers.Typo.stripped
 import java.util.*
