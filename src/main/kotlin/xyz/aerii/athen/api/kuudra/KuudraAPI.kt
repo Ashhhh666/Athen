@@ -1,12 +1,15 @@
 package xyz.aerii.athen.api.kuudra
 
+import net.minecraft.world.entity.monster.Giant
 import net.minecraft.world.entity.monster.MagmaCube
 import tech.thatgravyboat.skyblockapi.helpers.McClient
+import tech.thatgravyboat.skyblockapi.utils.extentions.getTexture
 import tech.thatgravyboat.skyblockapi.utils.extentions.serverMaxHealth
 import tech.thatgravyboat.skyblockapi.utils.regex.RegexUtils.anyMatch
 import tech.thatgravyboat.skyblockapi.utils.regex.RegexUtils.findOrNull
 import tech.thatgravyboat.skyblockapi.utils.regex.RegexUtils.findThenNull
 import xyz.aerii.athen.annotations.Priority
+import xyz.aerii.athen.api.kuudra.enums.AbstractSupply
 import xyz.aerii.athen.api.kuudra.enums.KuudraPhase
 import xyz.aerii.athen.api.kuudra.enums.KuudraPlayer
 import xyz.aerii.athen.api.kuudra.enums.KuudraSupply
@@ -32,6 +35,9 @@ object KuudraAPI {
     private val defeatRegex = Regex("^\\s+DEFEAT")
     private val buildRegex = Regex("Building Progress (?<progress>\\d+)% \\((?<players>\\d) Players Helping\\)")
     private val progressRegex = Regex("^PROGRESS: \\d+%")
+
+    private val set = setOf(KuudraPhase.SUPPLIES, KuudraPhase.FUEL)
+    private val set0 = setOf(KuudraSupply.supply, KuudraSupply.fuel)
 
     private val _k = Schrodinger(::fn) { !it.isAlive }
 
@@ -59,6 +65,12 @@ object KuudraAPI {
     val kuudra: MagmaCube? by _k
 
     @JvmStatic
+    val supplies: MutableSet<AbstractSupply> = mutableSetOf()
+
+    @JvmStatic
+    val fuels: MutableSet<AbstractSupply> = mutableSetOf()
+
+    @JvmStatic
     val teammates: MutableSet<KuudraPlayer> = mutableSetOf()
 
     init {
@@ -68,10 +80,32 @@ object KuudraAPI {
 
         on<KuudraEvent.Start> (priority = Int.MIN_VALUE) {
             teammates.clear()
-            for (p in McClient.players) teammates.add(KuudraPlayer(p.profile.name))
+            for (p in McClient.players) teammates += KuudraPlayer(p.profile.name)
         }
 
-        on<EntityEvent.NameChange> {
+        on<EntityEvent.Update.Equipment> {
+            if (!inRun) return@on
+            if (phase !in set) return@on
+            val e = entity as? Giant ?: return@on
+
+            if (supplies.any { it.entity == e } || fuels.any { it.entity == e }) return@on
+            if (e.mainHandItem?.getTexture() !in set0) return@on
+
+            val s = AbstractSupply(e)
+            if (phase == KuudraPhase.SUPPLIES) supplies += s
+            else fuels += s
+        }.runWhen(SkyBlockIsland.KUUDRA.inIsland)
+
+        on<EntityEvent.Unload> {
+            if (!inRun) return@on
+            if (phase !in set) return@on
+            val e = entity as? Giant ?: return@on
+
+            if (phase == KuudraPhase.SUPPLIES) supplies.removeIf { it.entity == e }
+            else fuels.removeIf { it.entity == e }
+        }.runWhen(SkyBlockIsland.KUUDRA.inIsland)
+
+        on<EntityEvent.Update.Named> {
             if (!inRun) return@on
             val phase = phase ?: return@on
 

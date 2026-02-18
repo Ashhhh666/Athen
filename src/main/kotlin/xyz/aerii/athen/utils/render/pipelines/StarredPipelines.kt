@@ -48,19 +48,4 @@ object StarredPipelines {
         .setDepthTest(OmniRenderPipeline.DepthTest.DISABLED)
         .setIrisType(IrisShaderType.BASIC)
         .build()
-
-    val positionColorTriangles = OmniRenderPipelines.builderWithDefaultShader(
-        location = ResourceLocation.fromNamespaceAndPath(Athen.modId, "pipeline/triangles"),
-        snippets = arrayOf(OmniRenderPipelineSnippets.POSITION_COLOR_TRIANGLES)
-    )
-        .setIrisType(IrisShaderType.BASIC)
-        .build()
-
-    val positionColorTrianglesNoDepth = OmniRenderPipelines.builderWithDefaultShader(
-        location = ResourceLocation.fromNamespaceAndPath(Athen.modId, "pipeline/triangles_nodepth"),
-        snippets = arrayOf(OmniRenderPipelineSnippets.POSITION_COLOR_TRIANGLES)
-    )
-        .setDepthTest(OmniRenderPipeline.DepthTest.DISABLED)
-        .setIrisType(IrisShaderType.BASIC)
-        .build()
 }

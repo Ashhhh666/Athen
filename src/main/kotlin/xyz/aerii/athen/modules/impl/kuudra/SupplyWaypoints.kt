@@ -22,16 +22,33 @@ object SupplyWaypoints : Module(
 ) {
     private val dropOff by config.switch("Drop off", true)
     private val dropOffColor by config.colorPicker("Drop off color", Color(Catppuccin.Mocha.Green.argb, true)).dependsOn { dropOff }
-
-    private val render: Boolean
-        get() = KuudraAPI.inRun && KuudraAPI.phase == KuudraPhase.SUPPLIES
+    private val pickup by config.switch("Pick up", true)
+    private val pickupColor by config.colorPicker("Pick up color", Color(Catppuccin.Mocha.Teal.argb, true)).dependsOn { pickup }
+    private val fuel by config.switch("Fuel", true)
+    private val fuelColor by config.colorPicker("Fuel color", Color(Catppuccin.Mocha.Blue.argb, true))
 
     init {
         on<WorldRenderEvent.Extract> {
-            if (!render) return@on
-            if (!dropOff) return@on
+            if (!KuudraAPI.inRun) return@on
+            if (!dropOff && !pickup && !fuel) return@on
 
-            for (b in KuudraSupply.every) if (!b.active) Render3D.drawFilledBox(b.buildAABB, dropOffColor, false)
+            when (KuudraAPI.phase) {
+                KuudraPhase.SUPPLIES if (dropOff || pickup) -> {
+                    if (dropOff) {
+                        for (b in KuudraSupply.every) if (!b.active) Render3D.drawFilledBox(b.buildAABB, dropOffColor, false)
+                    }
+
+                    if (pickup) {
+                        for (s in KuudraAPI.supplies) Render3D.drawWaypoint(s.blockPos, pickupColor, 2f, s.aabb)
+                    }
+                }
+
+                KuudraPhase.FUEL if fuel -> {
+                    for (s in KuudraAPI.fuels) Render3D.drawWaypoint(s.blockPos, fuelColor, 2f, s.aabb)
+                }
+
+                else -> {}
+            }
         }
     }
 }
