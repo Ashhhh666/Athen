@@ -49,7 +49,7 @@ object SlayerAPI {
             }
         }
 
-        on<EntityEvent.ComponentAttach> {
+        on<EntityEvent.Update.Attach> {
             val entity = infoLineEntity.c() ?: return@on
 
             val slayerInfo = when {

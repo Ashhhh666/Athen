@@ -50,7 +50,7 @@ object VengeanceTimer : Module(
             if (countDown > 0) countDown-- else reset()
         }.runWhen(count)
 
-        on<EntityEvent.NameChange> {
+        on<EntityEvent.Update.Named> {
             if (count.value) return@on
             val entity = infoLineEntity.getAttachedTo() ?: return@on
             val slayerInfo = SlayerAPI.slayerBosses[entity] ?: return@on

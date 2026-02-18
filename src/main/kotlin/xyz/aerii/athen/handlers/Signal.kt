@@ -16,6 +16,8 @@ import net.minecraft.client.renderer.MultiBufferSource
 import tech.thatgravyboat.skyblockapi.api.SkyBlockAPI
 import tech.thatgravyboat.skyblockapi.api.events.base.Subscription
 import tech.thatgravyboat.skyblockapi.api.events.entity.ComponentAttachEvent
+import tech.thatgravyboat.skyblockapi.api.events.entity.EntityAttributesUpdateEvent
+import tech.thatgravyboat.skyblockapi.api.events.entity.EntityEquipmentUpdateEvent
 import tech.thatgravyboat.skyblockapi.api.events.entity.NameChangedEvent
 import tech.thatgravyboat.skyblockapi.api.events.info.ScoreboardTitleUpdateEvent
 import tech.thatgravyboat.skyblockapi.api.events.info.ScoreboardUpdateEvent
@@ -129,10 +131,16 @@ object Signal {
     fun onCommand(event: RegisterCommandsEvent) = CommandRegistration(event).post()
 
     @Subscription(receiveCancelled = true)
-    fun onComponentAttach(event: ComponentAttachEvent) = EntityEvent.ComponentAttach(event.component, event.infoLineEntity).post()
+    fun onComponentAttach(event: ComponentAttachEvent) = EntityEvent.Update.Attach(event.component, event.infoLineEntity).post()
 
     @Subscription(receiveCancelled = true)
-    fun onNameChanged(event: NameChangedEvent) = EntityEvent.NameChange(event.component, event.infoLineEntity).post()
+    fun onNameChanged(event: NameChangedEvent) = EntityEvent.Update.Named(event.component, event.infoLineEntity).post()
+
+    @Subscription(receiveCancelled = true)
+    fun onEntityEquipment(event: EntityEquipmentUpdateEvent) = EntityEvent.Update.Equipment(event.entity).post()
+
+    @Subscription(receiveCancelled = true)
+    fun onEntityAttribute(event: EntityAttributesUpdateEvent) = EntityEvent.Update.Attributes(event.entity, event.changed).post()
 
     @Subscription
     fun onTooltipRender(event: ItemTooltipEvent) = GuiEvent.Tooltip.Render(event.item, event.tooltip).post()
