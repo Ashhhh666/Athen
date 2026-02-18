@@ -18,7 +18,7 @@ operator fun Pair<Double, Double>.times(k: Number): Pair<Double, Double> =
 private val ignoreSet = setOf(0, -1)
 
 fun Int.isPressed(): Boolean {
-    if (this in ignoreSet) return false
+    if (this in ignoreSet) return true
     return if (this > 0) OmniKeyboard.isPressed(this) else OmniMouse.isPressed(this)
 }
 
