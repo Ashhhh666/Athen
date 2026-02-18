@@ -49,7 +49,7 @@ import dev.deftu.omnicore.api.client.render.vertex.OmniBufferBuilder
 import net.minecraft.client.gui.Font
 import net.minecraft.client.renderer.LightTexture
 import net.minecraft.client.renderer.MultiBufferSource
-import net.minecraft.client.renderer.RenderType
+import net.minecraft.client.renderer./*? >= 1.21.11 {*//*rendertype.RenderTypes*//*? } else {*/RenderType/*? }*/
 import net.minecraft.client.renderer.texture.OverlayTexture
 import net.minecraft.core.BlockPos
 import net.minecraft.resources.ResourceLocation
@@ -270,8 +270,13 @@ object Render3D {
         val scoping = client.player?.isScoping ?: false
         val s = -1f + Mth.frac(-animationTime * 0.2f - Mth.floor(-animationTime * 0.1f).toFloat())
 
+        //? if >= 1.21.11 {
+        /*val opaqueType = RenderTypes.beaconBeam(beam, false)
+        val translucentType = RenderTypes.beaconBeam(beam, true)
+        *///? } else {
         val opaqueType = RenderType.beaconBeam(beam, false)
         val translucentType = RenderType.beaconBeam(beam, true)
+        //? }
 
         for (beacon in queue.beaconBeams) {
             val pos = beacon.pos
