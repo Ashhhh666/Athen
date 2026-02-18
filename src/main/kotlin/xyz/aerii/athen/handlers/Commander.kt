@@ -29,6 +29,7 @@ import xyz.aerii.athen.modules.impl.ModSettings
 import xyz.aerii.athen.modules.impl.general.keybinds.KeybindsGUI
 import xyz.aerii.athen.ui.themes.Catppuccin.Mocha
 import xyz.aerii.athen.updater.ModUpdater
+import xyz.aerii.athen.utils.formatted
 
 @Load
 object Commander {
@@ -57,12 +58,10 @@ object Commander {
         on<CommandRegistration> {
             event.register(Athen.modId) {
                 callback {
-                    if (ModSettings.commandConfig) {
-                        McClient.setScreen(ClickGUI)
-                        "Opened the config! <gray>(use /athen help to view commands)".parse().modMessage()
-                    } else {
-                        showHelp()
-                    }
+                    if (!ModSettings.commandConfig) return@callback showHelp()
+
+                    McClient.setScreen(ClickGUI)
+                    "Opened the config! <gray>(use /athen help to view commands)".parse().modMessage()
                 }
 
                 then("config") {
@@ -81,6 +80,16 @@ object Commander {
 
                 thenCallback("keybinds") {
                     McClient.setScreen(KeybindsGUI)
+                }
+
+                then("calc") {
+                    thenCallback("operation", StringArgumentType.greedyString()) {
+                        val str = StringArgumentType.getString(this, "operation")
+                        if (str.isEmpty()) return@thenCallback "Empty operation!".modMessage(Typo.PrefixType.ERROR)
+
+                        val result = Calculator.calc(str).formatted()
+                        "<gray>$str = <green>$result".parse().modMessage(Typo.PrefixType.SUCCESS)
+                    }
                 }
 
                 thenCallback("help") {
