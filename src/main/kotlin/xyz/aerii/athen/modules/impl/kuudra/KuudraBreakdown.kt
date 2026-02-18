@@ -34,20 +34,22 @@ object KuudraBreakdown : Module(
             for (t in KuudraAPI.teammates) set.add(Player(t.name))
         }
 
-        on<KuudraEvent.End.Any> {
-            if (set.isEmpty()) return@on
-
-            "<red>Run breakdown:".parse().modMessage()
-            for (p in set) {
-                " • <yellow>${p.name} <gray>- <red>${p.supply} <r>Supplies <gray>| <red>${p.fuel} <r>Fuels <gray>| <red>${p.deaths ?: "???"} <r>Deaths".parse().apply {
-                    if (p.stun > 0) onHover("<red>${p.stun} <r>Stuns".parse())
-                }.lie()
-            }
-        }
-
         on<ChatEvent> {
             if (actionBar) return@on
             val message = message.stripped().takeIf { it.isNotEmpty() } ?: return@on
+
+            if (message == "[NPC] Elle: Good job everyone. A hard fought battle come to an end. Let's get out of here before we run into any more trouble!") {
+                if (set.isEmpty()) return@on
+
+                "<red>Run breakdown:".parse().modMessage()
+                for (p in set) {
+                    " • <yellow>${p.name} <gray>- <red>${p.supply} <r>Supplies <gray>| <red>${p.fuel} <r>Fuels <gray>| <red>${p.deaths ?: "???"} <r>Deaths".parse().apply {
+                        if (p.stun > 0) onHover("<red>${p.stun} <r>Stuns".parse())
+                    }.lie()
+                }
+
+                return@on
+            }
 
             supplyRegex.findThenNull(message, "user") { (user) ->
                 val p = set.find { it.name == user } ?: return@findThenNull
