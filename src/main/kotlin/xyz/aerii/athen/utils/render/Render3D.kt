@@ -1,5 +1,6 @@
 /*
- * Heavily inspired by how OdinFabric batches the 3D rendering
+ * Heavily inspired by how OdinFabric batches the 3D rendering.
+ * Contains code from OdinFabric as well.
  *
  * OdinFabric is under BSD 3-Clause License:
  * BSD 3-Clause License
@@ -40,26 +41,34 @@
 package xyz.aerii.athen.utils.render
 
 import com.mojang.blaze3d.vertex.PoseStack
+import com.mojang.blaze3d.vertex.VertexConsumer
+import com.mojang.math.Axis
 import dev.deftu.omnicore.api.client.render.stack.OmniPoseStack
 import dev.deftu.omnicore.api.client.render.stack.OmniPoseStacks
 import dev.deftu.omnicore.api.client.render.vertex.OmniBufferBuilder
 import net.minecraft.client.gui.Font
 import net.minecraft.client.renderer.LightTexture
 import net.minecraft.client.renderer.MultiBufferSource
+import net.minecraft.client.renderer.RenderType
+import net.minecraft.client.renderer.texture.OverlayTexture
+import net.minecraft.core.BlockPos
+import net.minecraft.resources.ResourceLocation
+import net.minecraft.util.ARGB
+import net.minecraft.util.Mth
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
 import xyz.aerii.athen.events.WorldRenderEvent
 import xyz.aerii.athen.events.core.on
 import xyz.aerii.athen.handlers.Smoothie.client
+import xyz.aerii.athen.utils.markerAABB
 import xyz.aerii.athen.utils.render.pipelines.StarredPipelines
 import java.awt.Color
-import kotlin.math.cos
-import kotlin.math.sin
 import kotlin.math.sqrt
 
 private data class QueuedLine(val x1: Double, val y1: Double, val z1: Double, val x2: Double, val y2: Double, val z2: Double, val color: Color, val width: Float)
 private data class QueuedBox(val aabb: AABB, val color: Color, val width: Float)
 private data class QueuedFilledBox(val aabb: AABB, val color: Color)
+private data class QueuedBeaconBeam(val pos: BlockPos, val color: Int)
 private data class QueuedText(val text: String, val pos: Vec3, val color: Int, val bgColor: Int, val scale: Float, val shadow: Boolean, val depth: Boolean)
 
 private class RenderQueue {
@@ -69,6 +78,7 @@ private class RenderQueue {
     val boxesNoDepth = mutableListOf<QueuedBox>()
     val filledBoxesDepth = mutableListOf<QueuedFilledBox>()
     val filledBoxesNoDepth = mutableListOf<QueuedFilledBox>()
+    val beaconBeams = mutableListOf<QueuedBeaconBeam>()
     val texts = mutableListOf<QueuedText>()
 
     fun clear() {
@@ -78,11 +88,13 @@ private class RenderQueue {
         boxesNoDepth.clear()
         filledBoxesDepth.clear()
         filledBoxesNoDepth.clear()
+        beaconBeams.clear()
         texts.clear()
     }
 }
 
 object Render3D {
+    private val beam = ResourceLocation.fromNamespaceAndPath("minecraft", "textures/entity/beacon_beam.png")
     private val queue = RenderQueue()
 
     private val BOX_EDGES = arrayOf(
@@ -105,9 +117,13 @@ object Render3D {
             flushLines(poseStack)
             flushBoxes(poseStack)
             flushFilledBoxes(poseStack)
-            flushTexts(pose, consumers)
 
             pose.popPose()
+
+            try {
+                flushBeaconBeams(pose, camera, consumers)
+            } catch (e: Exception) { println("hello: $e") }
+            flushTexts(pose, consumers)
             queue.clear()
         }
     }
@@ -243,6 +259,63 @@ object Render3D {
         }
     }
 
+    /**
+     * @see net.minecraft.client.renderer.blockentity.BeaconRenderer
+     */
+    private fun flushBeaconBeams(pose: PoseStack, camera: Vec3, consumers: MultiBufferSource.BufferSource) {
+        if (queue.beaconBeams.isEmpty()) return
+
+        val partialTick = client.deltaTracker.getGameTimeDeltaPartialTick(false)
+        val animationTime = ((client.level?.gameTime ?: 0L) % 40).toFloat() + partialTick
+        val scoping = client.player?.isScoping ?: false
+        val s = -1f + Mth.frac(-animationTime * 0.2f - Mth.floor(-animationTime * 0.1f).toFloat())
+
+        val opaqueType = RenderType.beaconBeam(beam, false)
+        val translucentType = RenderType.beaconBeam(beam, true)
+
+        for (beacon in queue.beaconBeams) {
+            val pos = beacon.pos
+            val hdx = (pos.x + 0.5) - camera.x
+            val hdz = (pos.z + 0.5) - camera.z
+            val radiusScale = if (scoping) 1f else maxOf(1f, sqrt(hdx * hdx + hdz * hdz).toFloat() / 96f)
+            val beamRadius = 0.2f * radiusScale
+            val glowRadius = 0.25f * radiusScale
+
+            pose.pushPose()
+            pose.translate(pos.x - camera.x + 0.5, pos.y - camera.y, pos.z - camera.z + 0.5)
+
+            pose.pushPose()
+            pose.mulPose(Axis.YP.rotationDegrees(animationTime * 2.25f - 45f))
+            renderBeaconPart(pose.last(), consumers.getBuffer(opaqueType), beacon.color, 0f, beamRadius, beamRadius, 0f, -beamRadius, 0f, 0f, -beamRadius, 320 * (0.5f / beamRadius) + s, s)
+            pose.popPose()
+
+            renderBeaconPart(pose.last(), consumers.getBuffer(translucentType), ARGB.color(32, beacon.color), -glowRadius, -glowRadius, glowRadius, -glowRadius, -glowRadius, glowRadius, glowRadius, glowRadius, 320f + s, s)
+
+            pose.popPose()
+        }
+
+        consumers.endBatch(opaqueType)
+        consumers.endBatch(translucentType)
+    }
+
+    private fun renderBeaconPart(pose: PoseStack.Pose, consumer: VertexConsumer, color: Int, x1: Float, z1: Float, x2: Float, z2: Float, x3: Float, z3: Float, x4: Float, z4: Float, minV: Float, maxV: Float) {
+        renderBeaconQuad(pose, consumer, color, x1, z1, x2, z2, minV, maxV)
+        renderBeaconQuad(pose, consumer, color, x4, z4, x3, z3, minV, maxV)
+        renderBeaconQuad(pose, consumer, color, x2, z2, x4, z4, minV, maxV)
+        renderBeaconQuad(pose, consumer, color, x3, z3, x1, z1, minV, maxV)
+    }
+
+    private fun renderBeaconQuad(pose: PoseStack.Pose, consumer: VertexConsumer, color: Int, minX: Float, minZ: Float, maxX: Float, maxZ: Float, minV: Float, maxV: Float) {
+        addBeaconVertex(pose, consumer, color, 320, minX, minZ, 1f, minV)
+        addBeaconVertex(pose, consumer, color, 0, minX, minZ, 1f, maxV)
+        addBeaconVertex(pose, consumer, color, 0, maxX, maxZ, 0f, maxV)
+        addBeaconVertex(pose, consumer, color, 320, maxX, maxZ, 0f, minV)
+    }
+
+    private fun addBeaconVertex(pose: PoseStack.Pose, consumer: VertexConsumer, color: Int, y: Int, x: Float, z: Float, u: Float, v: Float) {
+        consumer.addVertex(pose, x, y.toFloat(), z).setColor(color).setUv(u, v).setOverlay(OverlayTexture.NO_OVERLAY).setLight(LightTexture.FULL_BRIGHT).setNormal(pose, 0f, 1f, 0f)
+    }
+
     private fun flushTexts(pose: PoseStack, consumers: MultiBufferSource.BufferSource) {
         val cam = client.gameRenderer.mainCamera
 
@@ -333,6 +406,36 @@ object Render3D {
 
     @JvmStatic
     @JvmOverloads
+    fun drawWaypoint(
+        pos: BlockPos,
+        color: Color,
+        aabb: AABB = pos.markerAABB(),
+        depthTest: Boolean = false
+    ) {
+        drawFilledBox(aabb, color, depthTest)
+        drawBeaconBeam(pos, color.rgb)
+    }
+
+    @JvmStatic
+    @JvmOverloads
+    fun drawWaypoint(
+        pos: BlockPos,
+        color: Color,
+        lineWidth: Float,
+        aabb: AABB = pos.markerAABB(),
+        depthTest: Boolean = false
+    ) {
+        drawBox(aabb, color, lineWidth, depthTest)
+        drawBeaconBeam(pos, color.rgb)
+    }
+
+    @JvmStatic
+    fun drawBeaconBeam(pos: BlockPos, color: Int) {
+        queue.beaconBeams.add(QueuedBeaconBeam(pos, color))
+    }
+
+    @JvmStatic
+    @JvmOverloads
     fun drawLine(
         from: Vec3,
         to: Vec3,
@@ -359,35 +462,6 @@ object Render3D {
             val from = points[i]
             val to = points[i + 1]
             lineQueue.add(QueuedLine(from.x, from.y, from.z, to.x, to.y, to.z, color, lineWidth))
-        }
-    }
-
-    @JvmStatic
-    @JvmOverloads
-    fun drawCylinder(
-        center: Vec3,
-        radius: Float,
-        height: Float,
-        color: Color,
-        segments: Int = 32,
-        lineWidth: Float = 2f,
-        depthTest: Boolean = true
-    ) {
-        val lineQueue = if (depthTest) queue.linesDepth else queue.linesNoDepth
-        val angleStep = 2.0 * Math.PI / segments
-
-        for (i in 0 until segments) {
-            val angle1 = i * angleStep
-            val angle2 = (i + 1) * angleStep
-
-            val x1 = radius * cos(angle1)
-            val z1 = radius * sin(angle1)
-            val x2 = radius * cos(angle2)
-            val z2 = radius * sin(angle2)
-
-            lineQueue.add(QueuedLine(center.x + x1, center.y + height, center.z + z1, center.x + x2, center.y + height, center.z + z2, color, lineWidth))
-            lineQueue.add(QueuedLine(center.x + x1, center.y, center.z + z1, center.x + x2, center.y, center.z + z2, color, lineWidth))
-            lineQueue.add(QueuedLine(center.x + x1, center.y, center.z + z1, center.x + x1, center.y + height, center.z + z1, color, lineWidth))
         }
     }
 
