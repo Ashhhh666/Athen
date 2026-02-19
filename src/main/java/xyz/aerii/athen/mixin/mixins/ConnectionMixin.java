@@ -12,7 +12,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import xyz.aerii.athen.events.PacketEvent;
 import xyz.aerii.athen.events.TickEvent;
 
-@Mixin(value = Connection.class, priority = Integer.MAX_VALUE) // why max value? it's for the features to not break when other mods cancel the packet.
+@Mixin(value = Connection.class, priority = Integer.MIN_VALUE) // why min value? it's for the features to not break when other mods cancel the packet.
 public class ConnectionMixin {
     @Inject(
             method = "channelRead0*",

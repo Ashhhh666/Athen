@@ -40,7 +40,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import xyz.aerii.athen.events.PacketEvent;
 
-@Mixin(value = ClientPacketListener.class, priority = Integer.MAX_VALUE) // why max value? it's for the features to not break when other mods cancel the packet.
+@Mixin(value = ClientPacketListener.class, priority = Integer.MIN_VALUE) // why min value? it's for the features to not break when other mods cancel the packet.
 public class ClientPacketListenerMixin {
     @WrapOperation(
             method = "handleBundlePacket",
