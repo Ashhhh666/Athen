@@ -65,7 +65,13 @@ import xyz.aerii.athen.utils.render.pipelines.StarredPipelines
 import java.awt.Color
 import kotlin.math.sqrt
 
-private data class QueuedLine(val x1: Double, val y1: Double, val z1: Double, val x2: Double, val y2: Double, val z2: Double, val color: Color, val width: Float)
+//? >= 1.21.11 {
+/*import net.minecraft.gizmos.GizmoStyle
+import net.minecraft.gizmos.Gizmos
+import net.minecraft.gizmos.TextGizmo
+*///? }
+
+private data class QueuedLine(val start: Vec3, val end: Vec3, val color: Color, val width: Float)
 private data class QueuedBox(val aabb: AABB, val color: Color, val width: Float)
 private data class QueuedFilledBox(val aabb: AABB, val color: Color)
 private data class QueuedBeaconBeam(val pos: BlockPos, val color: Int)
@@ -118,12 +124,10 @@ object Render3D {
             flushBoxes(poseStack)
             flushFilledBoxes(poseStack)
 
-            pose.popPose()
-
-            try {
-                flushBeaconBeams(pose, camera, consumers)
-            } catch (e: Exception) { println("hello: $e") }
+            flushBeaconBeams(pose, camera, consumers)
             flushTexts(pose, consumers)
+
+            pose.popPose()
             queue.clear()
         }
     }
@@ -138,6 +142,19 @@ object Render3D {
         if (noDepthList.isNotEmpty()) block(false, noDepthList)
     }
 
+    //? >= 1.21.11 {
+    /*private fun flushLines(poseStack: OmniPoseStack) { // does not need posestack
+        forDepth(queue.linesDepth, queue.linesNoDepth) { depth, lines ->
+            if (lines.isEmpty()) return@forDepth
+
+            for (l in lines) {
+                Gizmos.line(l.start, l.end, l.color.rgb).apply {
+                    if (!depth) setAlwaysOnTop()
+                }
+            }
+        }
+    }
+    *///? } else {
     private fun flushLines(poseStack: OmniPoseStack) {
         forDepth(queue.linesDepth, queue.linesNoDepth) { depth, lines ->
             if (lines.isEmpty()) return@forDepth
@@ -150,8 +167,8 @@ object Render3D {
                 addLineVertices(
                     buffer,
                     poseStack,
-                    line.x1, line.y1, line.z1,
-                    line.x2, line.y2, line.z2,
+                    line.start.x, line.start.y, line.start.z,
+                    line.end.x, line.end.y, line.end.z,
                     line.color
                 )
 
@@ -159,7 +176,21 @@ object Render3D {
             }
         }
     }
+    //? }
 
+    //? >= 1.21.11 {
+    /*private fun flushBoxes(poseStack: OmniPoseStack) { // does not need posestack
+        forDepth(queue.boxesDepth, queue.boxesNoDepth) { depth, boxes ->
+            if (boxes.isEmpty()) return@forDepth
+
+            for (b in boxes) {
+                Gizmos.cuboid(b.aabb, GizmoStyle.stroke(b.color.rgb, b.width)).apply {
+                    if (!depth) setAlwaysOnTop()
+                }
+            }
+        }
+    }
+    *///? } else {
     private fun flushBoxes(poseStack: OmniPoseStack) {
         forDepth(queue.boxesDepth, queue.boxesNoDepth) { depth, boxes ->
             if (boxes.isEmpty()) return@forDepth
@@ -194,7 +225,21 @@ object Render3D {
             }
         }
     }
+    //? }
 
+    //? >= 1.21.11 {
+    /*private fun flushFilledBoxes(poseStack: OmniPoseStack) { // does not need posestack
+        forDepth(queue.filledBoxesDepth, queue.filledBoxesNoDepth) { depth, boxes ->
+            if (boxes.isEmpty()) return@forDepth
+
+            for (b in boxes) {
+                Gizmos.cuboid(b.aabb, GizmoStyle.fill(b.color.rgb)).apply {
+                    if (!depth) setAlwaysOnTop()
+                }
+            }
+        }
+    }
+    *///? } else {
     private fun flushFilledBoxes(poseStack: OmniPoseStack) {
         forDepth(queue.filledBoxesDepth, queue.filledBoxesNoDepth) { depth, boxes ->
             if (boxes.isEmpty()) return@forDepth
@@ -258,6 +303,7 @@ object Render3D {
             buffer.buildOrThrow().drawAndClose(pipeline)
         }
     }
+    //? }
 
     /**
      * @see net.minecraft.client.renderer.blockentity.BeaconRenderer
@@ -280,14 +326,14 @@ object Render3D {
 
         for (beacon in queue.beaconBeams) {
             val pos = beacon.pos
-            val hdx = (pos.x + 0.5) - camera.x
-            val hdz = (pos.z + 0.5) - camera.z
+            val hdx = pos.x + 0.5
+            val hdz = pos.z + 0.5
             val radiusScale = if (scoping) 1f else maxOf(1f, sqrt(hdx * hdx + hdz * hdz).toFloat() / 96f)
             val beamRadius = 0.2f * radiusScale
             val glowRadius = 0.25f * radiusScale
 
             pose.pushPose()
-            pose.translate(pos.x - camera.x + 0.5, pos.y - camera.y, pos.z - camera.z + 0.5)
+            pose.translate(pos.x + 0.5, pos.y.toDouble(), pos.z + 0.5)
 
             pose.pushPose()
             pose.mulPose(Axis.YP.rotationDegrees(animationTime * 2.25f - 45f))
@@ -449,7 +495,7 @@ object Render3D {
         depthTest: Boolean = true
     ) {
         val lineQueue = if (depthTest) queue.linesDepth else queue.linesNoDepth
-        lineQueue.add(QueuedLine(from.x, from.y, from.z, to.x, to.y, to.z, color, lineWidth))
+        lineQueue.add(QueuedLine(from, to, color, lineWidth))
     }
 
     @JvmStatic
@@ -466,7 +512,7 @@ object Render3D {
         for (i in 0 until points.size - 1) {
             val from = points[i]
             val to = points[i + 1]
-            lineQueue.add(QueuedLine(from.x, from.y, from.z, to.x, to.y, to.z, color, lineWidth))
+            lineQueue.add(QueuedLine(from, to, color, lineWidth))
         }
     }
 
