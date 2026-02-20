@@ -1,30 +1,58 @@
+@file:Suppress("UNCHECKED_CAST")
+
 package xyz.aerii.athen.events.core
 
 import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.CopyOnWriteArrayList
 
 object EventBus {
-    val all = ConcurrentHashMap<Class<out Event>, CopyOnWriteArrayList<Node<out Event>>>()
-    val cached = ConcurrentHashMap<Class<out Event>, Array<Node<out Event>>>()
+    val all = ConcurrentHashMap<Class<out Event>, Array<Node<out Event>>>()
 
     @Suppress("UNCHECKED_CAST")
     fun <T : Event> post(event: T) {
-        val nodes = cached[event.javaClass] as? Array<Node<T>> ?: return
+        val nodes = all[event.javaClass] as? Array<Node<T>> ?: return
         for (i in nodes) i.handler(event)
     }
 
-    fun Node<*>.handle() = apply {
-        all.computeIfAbsent(eventClass) { CopyOnWriteArrayList() }.add(this)
-        cache(eventClass)
+    fun add(node: Node<*>) {
+        val cls = node.eventClass
+
+        while (true) {
+            val old = all[cls]
+            val size = old?.size ?: 0
+
+            if (old?.any { it === node } == true) return
+            val new = arrayOfNulls<Node<*>>(size + 1) as Array<Node<*>>
+            var i = 0
+
+            old?.let {
+                while (i < size && old[i].priority <= node.priority) new[i] = old[i].also { i++ }
+                if (i < size) System.arraycopy(old, i, new, i + 1, size - i)
+            }
+
+            new[i] = node
+            if (old == null && all.putIfAbsent(cls, new) == null || old != null && all.replace(cls, old, new)) return
+        }
     }
 
-    fun cache(eventClass: Class<out Event>) {
-        val list = all[eventClass] ?: return
+    fun remove(node: Node<*>) {
+        val cls = node.eventClass
 
-        val tmp = ArrayList<Node<*>>(list.size)
-        for (n in list) if (n.registered) tmp.add(n)
+        while (true) {
+            val old = all[cls] ?: return
+            val size = old.size
+            val index = old.indexOfFirst { it === node }
+            if (index == -1) return
 
-        tmp.sortBy { it.priority }
-        cached[eventClass] = tmp.toTypedArray()
+            if (size == 1) {
+                if (all.remove(cls, old)) return
+                continue
+            }
+
+            val new = arrayOfNulls<Node<*>>(size - 1) as Array<Node<*>>
+            if (index > 0) System.arraycopy(old, 0, new, 0, index)
+            if (index < size - 1) System.arraycopy(old, index + 1, new, index, size - index - 1)
+
+            if (all.replace(cls, old, new)) return
+        }
     }
 }

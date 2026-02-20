@@ -7,7 +7,7 @@ class Node<T : Event>(
     @JvmField var handler: (T) -> Unit,
     @JvmField val priority: Int
 ) {
-    @Volatile var registered = true
+    @Volatile var registered = false
     internal var overridden = false
     internal val conditions = mutableListOf<React<Boolean>>()
 
@@ -15,19 +15,21 @@ class Node<T : Event>(
         val original = handler
         handler = {
             original(it)
-            EventBus.all[eventClass]?.remove(this)
-            EventBus.cache(eventClass)
+            unregister()
         }
     }
 
-    fun register() = toggle(true)
+    fun register(): Boolean {
+        if (registered) return false
+        registered = true
+        EventBus.add(this)
+        return true
+    }
 
-    fun unregister() = toggle(false)
-
-    fun toggle(value: Boolean): Boolean {
-        if (registered == value) return false
-        registered = value
-        EventBus.cache(eventClass)
+    fun unregister(): Boolean {
+        if (!registered) return false
+        registered = false
+        EventBus.remove(this)
         return true
     }
 

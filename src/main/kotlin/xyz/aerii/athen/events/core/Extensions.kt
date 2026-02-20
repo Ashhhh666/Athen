@@ -3,13 +3,12 @@ package xyz.aerii.athen.events.core
 import net.minecraft.network.protocol.Packet
 import xyz.aerii.athen.events.CommandRegistration
 import xyz.aerii.athen.events.PacketEvent
-import xyz.aerii.athen.events.core.EventBus.handle
 import xyz.aerii.athen.handlers.React
 
 inline fun <reified T : Event> on(
     priority: Int = 0,
     noinline handler: T.() -> Unit
-) = Node(T::class.java, handler, priority).handle()
+) = Node(T::class.java, handler, priority).apply { register() }
 
 inline fun <reified E : PacketEvent, reified P : Packet<*>> on(
     priority: Int = 0,
