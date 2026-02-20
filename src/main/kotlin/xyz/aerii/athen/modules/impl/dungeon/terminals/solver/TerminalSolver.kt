@@ -3,7 +3,6 @@
 package xyz.aerii.athen.modules.impl.dungeon.terminals.solver
 
 import dev.deftu.omnicore.api.client.input.OmniKeyboard
-import net.minecraft.resources.ResourceLocation
 import net.minecraft.sounds.SoundEvent
 import xyz.aerii.athen.annotations.Load
 import xyz.aerii.athen.api.dungeon.terminals.TerminalAPI
@@ -20,6 +19,7 @@ import xyz.aerii.athen.modules.Module
 import xyz.aerii.athen.modules.impl.dungeon.terminals.solver.impl.*
 import xyz.aerii.athen.ui.themes.Catppuccin.Mocha
 import xyz.aerii.athen.utils.nvg.NVGSpecialRenderer
+import xyz.aerii.athen.utils.sound
 import xyz.aerii.athen.utils.url
 import java.awt.Color
 
@@ -78,10 +78,10 @@ object TerminalSolver : Module(
     )
 
     init {
-        `sound$click` = clickSound.value.prs()
+        `sound$click` = clickSound.value.sound()
 
         clickSound.state.onChange {
-            `sound$click` = it.prs()
+            `sound$click` = it.sound()
         }
 
         on<GuiEvent.Container.Render.Pre> {
@@ -143,10 +143,5 @@ object TerminalSolver : Module(
         val height = client.window.height / uiScale
 
         solver.click(mx, my, width, height, mouse)
-    }
-
-    private fun String.prs(): SoundEvent? {
-        val p = ResourceLocation.tryParse(this) ?: return null
-        return SoundEvent.createVariableRangeEvent(p)
     }
 }

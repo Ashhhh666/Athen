@@ -5,7 +5,6 @@ package xyz.aerii.athen.modules.impl
 import xyz.aerii.athen.annotations.Load
 import xyz.aerii.athen.config.Category
 import xyz.aerii.athen.modules.Module
-import xyz.aerii.athen.utils.render.Render2D.sizedText
 
 @Load
 object ModSettings : Module(
@@ -20,10 +19,4 @@ object ModSettings : Module(
 
     @JvmStatic
     val commandConfig by config.switch("\'/athen\' opens config")
-
-    init {
-        config.hud("Help", outsidePreview = false) {
-            sizedText("Use Arrow Keys to move elements\nPress C to center elements.")
-        }
-    }
 }

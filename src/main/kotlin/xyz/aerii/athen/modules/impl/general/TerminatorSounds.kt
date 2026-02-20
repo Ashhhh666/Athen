@@ -2,7 +2,6 @@
 
 package xyz.aerii.athen.modules.impl.general
 
-import net.minecraft.resources.ResourceLocation
 import net.minecraft.sounds.SoundEvent
 import net.minecraft.sounds.SoundEvents
 import net.minecraft.world.item.BowItem
@@ -15,6 +14,7 @@ import xyz.aerii.athen.events.SoundPlayEvent
 import xyz.aerii.athen.handlers.Smoothie.heldItem
 import xyz.aerii.athen.handlers.Smoothie.play
 import xyz.aerii.athen.modules.Module
+import xyz.aerii.athen.utils.sound
 import xyz.aerii.athen.utils.url
 
 @Load
@@ -38,10 +38,10 @@ object TerminatorSounds : Module(
     }
 
     init {
-        real = s.value.prs()
+        real = s.value.sound()
 
         s.state.onChange {
-            real = it.prs()
+            real = it.sound()
         }
 
         on<SoundPlayEvent> {
@@ -54,10 +54,5 @@ object TerminatorSounds : Module(
             cancel()
             r.play(v, p)
         }
-    }
-
-    private fun String.prs(): SoundEvent? {
-        val p = ResourceLocation.tryParse(this) ?: return null
-        return SoundEvent.createVariableRangeEvent(p)
     }
 }
