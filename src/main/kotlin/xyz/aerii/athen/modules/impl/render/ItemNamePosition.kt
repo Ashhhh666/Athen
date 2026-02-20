@@ -35,8 +35,8 @@ object ItemNamePosition : Module(
     }
 
     @JvmStatic
-    fun x(): Int = hud.scaledX.toInt() + int / 2
+    fun x(): Int = hud.x.toInt() + int / 2
 
     @JvmStatic
-    fun y(): Int = hud.scaledY.toInt()
+    fun y(): Int = hud.y.toInt()
 }

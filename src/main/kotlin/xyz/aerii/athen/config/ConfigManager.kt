@@ -174,7 +174,7 @@ object ConfigManager {
         abstract val visibilityDependency: (() -> Boolean)?
         abstract val parentKey: String?
 
-        data class HUDElement(override val name: String, override val key: String, val default: Boolean, val hudElement: xyz.aerii.athen.hud.internal.HUDElement, val config: ConfigBuilder, override val visibilityDependency: (() -> Boolean)? = null, override val parentKey: String? = null) : ElementData()
+        data class HUDElement(override val name: String, override val key: String, val default: Boolean, val hudElement: xyz.aerii.athen.hud.HUDElement, val config: ConfigBuilder, override val visibilityDependency: (() -> Boolean)? = null, override val parentKey: String? = null) : ElementData()
         data class Switch(override val name: String, override val key: String, val default: Boolean, override val visibilityDependency: (() -> Boolean)? = null, override val parentKey: String? = null) : ElementData()
         data class Slider(override val name: String, override val key: String, val min: Double, val max: Double, val default: Double, val showDouble: Boolean, val unit: String, override val visibilityDependency: (() -> Boolean)? = null, override val parentKey: String? = null) : ElementData()
         data class Dropdown(override val name: String, override val key: String, val options: List<String>, val default: Int, override val visibilityDependency: (() -> Boolean)? = null, override val parentKey: String? = null) : ElementData()

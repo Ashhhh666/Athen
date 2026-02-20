@@ -20,7 +20,6 @@ import xyz.aerii.athen.handlers.Typo.centeredText
 import xyz.aerii.athen.handlers.Typo.lie
 import xyz.aerii.athen.handlers.Typo.modMessage
 import xyz.aerii.athen.handlers.Typo.repeatBreak
-import xyz.aerii.athen.hud.internal.HUDEditor
 import xyz.aerii.athen.modules.impl.Dev
 import xyz.aerii.athen.modules.impl.Dev.clickUiHelperCollapsed
 import xyz.aerii.athen.modules.impl.Dev.clickUiHelperHidden
@@ -75,7 +74,7 @@ object Commander {
                 }
 
                 thenCallback("hud") {
-                    McClient.setScreen(HUDEditor)
+                    McClient.setScreen(xyz.aerii.athen.hud.HUDEditor)
                 }
 
                 thenCallback("keybinds") {

@@ -3,9 +3,9 @@ package xyz.aerii.athen.config
 import net.minecraft.client.gui.GuiGraphics
 import xyz.aerii.athen.Athen
 import xyz.aerii.athen.handlers.React
-import xyz.aerii.athen.hud.internal.HUDElement
-import xyz.aerii.athen.hud.internal.HUDElementContext
-import xyz.aerii.athen.hud.internal.HUDManager
+import xyz.aerii.athen.hud.HUDElement
+import xyz.aerii.athen.hud.HUDElementContext
+import xyz.aerii.athen.hud.HUDManager
 import xyz.aerii.athen.modules.Module
 import java.awt.Color
 import kotlin.properties.ReadOnlyProperty

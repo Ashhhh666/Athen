@@ -1,6 +1,6 @@
 @file:Suppress("AssignedValueIsNeverRead", "VariableNeverRead")
 
-package xyz.aerii.athen.hud.internal
+package xyz.aerii.athen.hud
 
 import tech.thatgravyboat.skyblockapi.platform.pushPop
 import tech.thatgravyboat.skyblockapi.platform.scale
@@ -14,7 +14,7 @@ import xyz.aerii.athen.handlers.Smoothie.client
 
 @Priority(-2)
 object HUDManager {
-    private val storage = Scribble("config/HUD")
+    private val storage = Scribble("config/HUDEditor")
     val elements = mutableMapOf<String, HUDElement>()
 
     init {
@@ -22,11 +22,11 @@ object HUDManager {
             if (client.screen is HUDEditor) return@on
 
             for (element in elements.values) {
-                if (!element.renderNormal || !element.renderOutsidePreview) continue
+                if (!element.render0) continue
 
                 graphics.pushPop {
-                    graphics.translate(element.scaledX, element.scaledY)
-                    graphics.scale(element.scaledScale, element.scaledScale)
+                    graphics.translate(element.x, element.y)
+                    graphics.scale(element.scale, element.scale)
                     graphics.pushPop { element.render(graphics, false) }
                 }
             }
@@ -35,14 +35,14 @@ object HUDManager {
 
     fun register(element: HUDElement) {
         elements[element.id] = element
-        Chronos.Tick run { loadLayout(element.id) }
+        Chronos.Tick run { get(element.id) }
     }
 
-    fun saveLayouts() {
+    fun set() {
         for ((id, element) in elements) {
-            var x by storage.float("$id.x", 20f)
-            var y by storage.float("$id.y", 20f)
-            var scale by storage.float("$id.scale", 1f)
+            var x by storage.float("$id.x", element.defaultX)
+            var y by storage.float("$id.y", element.defaultY)
+            var scale by storage.float("$id.scale", element.defaultScale)
 
             x = element.x
             y = element.y
@@ -52,12 +52,12 @@ object HUDManager {
         storage.save()
     }
 
-    fun loadLayout(id: String) {
+    fun get(id: String) {
         val element = elements[id] ?: return
 
-        val x by storage.float("$id.x", 20f)
-        val y by storage.float("$id.y", 20f)
-        val scale by storage.float("$id.scale", 1f)
+        val x by storage.float("$id.x", element.defaultX)
+        val y by storage.float("$id.y", element.defaultY)
+        val scale by storage.float("$id.scale", element.defaultScale)
 
         element.x = x
         element.y = y

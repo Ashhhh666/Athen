@@ -1,8 +1,9 @@
 @file:Suppress("Unused")
 
-package xyz.aerii.athen.hud.internal
+package xyz.aerii.athen.hud
 
 import xyz.aerii.athen.config.ConfigBuilder
+import java.awt.Color
 
 /**
  * A wrapper for ConfigBuilder that automatically makes the options depend on the HUD element being enabled in the config screen.
@@ -23,7 +24,7 @@ class HUDElementContext(
     fun dropdown(name: String, options: List<String>, default: Int = 0) =
         builder.dropdown(name, options, default).dependsOn { hudElement.enabled }
 
-    fun colorPicker(name: String, default: java.awt.Color = java.awt.Color(0, 255, 255, 127)) =
+    fun colorPicker(name: String, default: Color = Color(0, 255, 255, 127)) =
         builder.colorPicker(name, default).dependsOn { hudElement.enabled }
 
     fun keybind(name: String, default: Int = 0) =

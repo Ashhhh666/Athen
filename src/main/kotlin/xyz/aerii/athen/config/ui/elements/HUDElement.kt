@@ -7,8 +7,8 @@ import xyz.aerii.athen.config.ui.elements.base.IBaseUI
 import xyz.aerii.athen.config.ui.elements.base.ISwitch
 import xyz.aerii.athen.handlers.Roulette
 import xyz.aerii.athen.handlers.Scurry.isAreaHovered
-import xyz.aerii.athen.hud.internal.HUDEditor
-import xyz.aerii.athen.hud.internal.HUDElement
+import xyz.aerii.athen.hud.HUDEditor
+import xyz.aerii.athen.hud.HUDElement
 import xyz.aerii.athen.utils.nvg.NVGRenderer
 import xyz.aerii.athen.utils.render.animations.springValue
 
