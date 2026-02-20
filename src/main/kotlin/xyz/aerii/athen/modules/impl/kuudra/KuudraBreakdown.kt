@@ -9,6 +9,8 @@ import xyz.aerii.athen.api.location.SkyBlockIsland
 import xyz.aerii.athen.config.Category
 import xyz.aerii.athen.events.KuudraEvent
 import xyz.aerii.athen.events.MessageEvent
+import xyz.aerii.athen.handlers.Smoothie
+import xyz.aerii.athen.handlers.Texter.literal
 import xyz.aerii.athen.handlers.Texter.onHover
 import xyz.aerii.athen.handlers.Texter.parse
 import xyz.aerii.athen.handlers.Typo.lie
@@ -22,12 +24,23 @@ object KuudraBreakdown : Module(
     "Sends a message about what each player did at the end of the run.",
     Category.KUUDRA
 ) {
+    private val freshMessage = config.textInput("Fresh regex", "FRESH.+").custom("freshRegex")
+    private var freshRegex: Regex? = null
+
     private val supplyRegex = Regex("(?:\\[[^]]*])? ?(?<user>\\w+) recovered one of Elle's supplies! \\(\\d+/\\d+\\)")
     private val fuelRegex = Regex("(?:\\[[^]]*])? ?(?<user>\\w+) recovered a Fuel Cell and charged the Ballista! \\(\\d+%\\)")
     private val stunRegex = Regex("(?<user>\\w+) destroyed one of Kuudra's pods!")
+    private val partyRegex = Regex("^Party > (?:\\[[^]]*?] )?(?<username>\\w{1,16})(?: [ቾ⚒])?: ?(?<message>.+)$")
+
     private val set = mutableSetOf<Player>()
 
     init {
+        freshRegex = freshMessage.value.regex()
+
+        freshMessage.state.onChange {
+            freshRegex = it.regex() ?: return@onChange
+        }
+
         on<KuudraEvent.Start> {
             set.clear()
             for (t in KuudraAPI.teammates) set.add(Player(t.name))
@@ -39,32 +52,49 @@ object KuudraBreakdown : Module(
             if (stripped == "[NPC] Elle: Good job everyone. A hard fought battle come to an end. Let's get out of here before we run into any more trouble!") {
                 if (set.isEmpty()) return@on
 
+                val fresh: MutableList<String> = mutableListOf()
+
                 "<red>Run breakdown:".parse().modMessage()
                 for (p in set) {
+                    if (p.fresh > 0) fresh.add("§c${p.name}§f: ${p.fresh}")
+
                     " • <yellow>${p.name} <gray>- <red>${p.supply} <r>Supplies <gray>| <red>${p.fuel} <r>Fuels <gray>| <red>${p.deaths ?: "???"} <r>Deaths".parse().apply {
                         if (p.stun > 0) onHover("<red>${p.stun} <r>Stuns".parse())
                     }.lie()
                 }
 
+                val total = set.sumOf { it.fresh }
+                " • <orange>Freshens: <red>$total".parse().apply {
+                    if (fresh.isNotEmpty()) onHover(fresh.joinToString("\n").literal())
+                }.lie()
+
                 return@on
             }
 
+            if (stripped == "Your Fresh Tools Perk bonus doubles your building speed for the next 10 seconds!") {
+                set.find { it.name == Smoothie.playerName }?.fresh++
+                return@on
+            }
+
+            partyRegex.findThenNull(stripped, "username", "message") { (username, message) ->
+                if (username == Smoothie.playerName) return@findThenNull
+                if (freshRegex?.matches(message) != true) return@findThenNull
+                set.find { it.name == username }?.fresh++
+            } ?: return@on
+
             supplyRegex.findThenNull(stripped, "user") { (user) ->
-                val p = set.find { it.name == user } ?: return@findThenNull
-                p.supply++
+                set.find { it.name == user }?.supply++
             } ?: return@on
 
             fuelRegex.findThenNull(stripped, "user") { (user) ->
-                val p = set.find { it.name == user } ?: return@findThenNull
-                p.fuel++
+                set.find { it.name == user }?.fuel++
             } ?: return@on
 
             val tier = KuudraAPI.tier?.int ?: return@on
             if (tier < KuudraTier.BURNING.int) return@on
 
             stunRegex.findThenNull(stripped, "user") { (user) ->
-                val p = set.find { it.name == user } ?: return@findThenNull
-                p.stun++
+                set.find { it.name == user }?.stun++
             }
         }
     }
@@ -73,9 +103,18 @@ object KuudraBreakdown : Module(
         val name: String,
         var supply: Int = 0,
         var fuel: Int = 0,
-        var stun: Int = 0
+        var stun: Int = 0,
+        var fresh: Int = 0
     ) {
         val deaths: Int?
             get() = KuudraAPI.teammates.find { it.name == name }?.deaths
+    }
+
+    private fun String.regex(): Regex? {
+        return try {
+            Regex(this)
+        } catch (_: Exception) {
+            null
+        }
     }
 }
