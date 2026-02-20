@@ -3,6 +3,7 @@ package xyz.aerii.athen.api.kuudra
 import net.minecraft.world.entity.monster.Giant
 import net.minecraft.world.entity.monster.MagmaCube
 import tech.thatgravyboat.skyblockapi.helpers.McClient
+import tech.thatgravyboat.skyblockapi.helpers.McLevel
 import tech.thatgravyboat.skyblockapi.utils.extentions.getTexture
 import tech.thatgravyboat.skyblockapi.utils.extentions.serverMaxHealth
 import tech.thatgravyboat.skyblockapi.utils.regex.RegexUtils.anyMatch
@@ -20,6 +21,7 @@ import xyz.aerii.athen.events.KuudraEvent
 import xyz.aerii.athen.events.LocationEvent
 import xyz.aerii.athen.events.MessageEvent
 import xyz.aerii.athen.events.ScoreboardEvent
+import xyz.aerii.athen.events.TickEvent
 import xyz.aerii.athen.events.core.on
 import xyz.aerii.athen.events.core.runWhen
 import xyz.aerii.athen.handlers.Schrodinger
@@ -83,9 +85,26 @@ object KuudraAPI {
             for (p in McClient.players) teammates += KuudraPlayer(p.profile.name)
         }
 
-        on<EntityEvent.Update.Equipment> {
+        on<TickEvent.Client> {
             if (!inRun) return@on
             if (phase !in set) return@on
+
+            if (ticks % 2 != 0) return@on
+
+            if (phase == KuudraPhase.SUPPLIES) for (s in supplies) s.pos()
+            else if (phase == KuudraPhase.FUEL) for (f in fuels) f.pos()
+
+            if (ticks % 10 != 0) return@on
+            val players = McLevel.players.takeIf { it.isNotEmpty() } ?: return@on
+
+            if (phase == KuudraPhase.SUPPLIES) for (s in supplies) s.nearby = players.any { s.radAABB.contains(it.position()) }
+            else if (phase == KuudraPhase.FUEL) for (f in fuels) f.nearby = players.any { f.radAABB.contains(it.position()) }
+        }.runWhen(SkyBlockIsland.KUUDRA.inIsland)
+
+        on<EntityEvent.Update.Equipment> {
+            if (!inRun) return@on
+            if (phase?.int == KuudraPhase.LAIR.int) return@on
+            if (phase == KuudraPhase.BUILD && buildProgress < 90) return@on
             val e = entity as? Giant ?: return@on
 
             if (supplies.any { it.entity == e } || fuels.any { it.entity == e }) return@on

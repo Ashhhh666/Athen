@@ -26,6 +26,8 @@ object SupplyWaypoints : Module(
     private val pickupColor by config.colorPicker("Pick up color", Color(Catppuccin.Mocha.Teal.argb, true)).dependsOn { pickup }
     private val fuel by config.switch("Fuel", true)
     private val fuelColor by config.colorPicker("Fuel color", Color(Catppuccin.Mocha.Blue.argb, true))
+    private val changeColor by config.switch("Change color when player nearby", true)
+    private val playerColor by config.colorPicker("Player nearby color", Color(Catppuccin.Mocha.Peach.argb, true)).dependsOn { changeColor }
 
     init {
         on<WorldRenderEvent.Extract> {
@@ -39,12 +41,18 @@ object SupplyWaypoints : Module(
                     }
 
                     if (pickup) {
-                        for (s in KuudraAPI.supplies) Render3D.drawWaypoint(s.blockPos, pickupColor, 2f, s.aabb)
+                        for (s in KuudraAPI.supplies) {
+                            val color = if (changeColor && s.nearby) playerColor else pickupColor
+                            Render3D.drawWaypoint(s.blockPos, color, 2f, s.aabb)
+                        }
                     }
                 }
 
                 KuudraPhase.FUEL if fuel -> {
-                    for (s in KuudraAPI.fuels) Render3D.drawWaypoint(s.blockPos, fuelColor, 2f, s.aabb)
+                    for (s in KuudraAPI.fuels) {
+                        val color = if (changeColor && s.nearby) playerColor else fuelColor
+                        Render3D.drawWaypoint(s.blockPos, color, 2f, s.aabb)
+                    }
                 }
 
                 else -> {}

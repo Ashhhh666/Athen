@@ -2,6 +2,7 @@
 
 package xyz.aerii.athen.utils
 
+import net.minecraft.world.phys.AABB
 import xyz.aerii.athen.handlers.React
 import xyz.aerii.athen.handlers.Texter.literal
 import java.util.*
@@ -20,3 +21,6 @@ val ALWAYS_FALSE = React(false).immutable()
 
 @JvmField
 val ZERO_PAIR = 0 to 0
+
+@JvmField
+val ZERO_AABB = AABB(0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
