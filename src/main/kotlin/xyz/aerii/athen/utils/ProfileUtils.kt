@@ -56,17 +56,12 @@ fun fetchPlayerStats(
     onSuccess: (PlayerStats) -> Unit,
     onError: ((Throwable) -> Unit)? = null
 ) {
-    val str = if (include.isNotEmpty()) "&include=${include.joinToString(",")}" else ""
-    Beacon.get("$apiUrl/stats?names=$username$str&gzip=true", true) {
-        onJsonSuccess { json ->
-            onSuccess(json.parseProfile().toPlayerStats())
-        }
-
-        onError {
-            Athen.LOGGER.error("Failed to fetch stats for $username", it)
-            onError?.invoke(it) ?: onSuccess(PlayerStats(loading = false))
-        }
-    }
+    fetchPlayerStats(
+        listOf(username),
+        include,
+        { onSuccess(it.getValue(username)) },
+        onError
+    )
 }
 
 fun fetchPlayerStats(
