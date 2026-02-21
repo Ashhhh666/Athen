@@ -11,8 +11,8 @@ import tech.thatgravyboat.skyblockapi.utils.regex.RegexUtils.findOrNull
 import tech.thatgravyboat.skyblockapi.utils.regex.RegexUtils.findThenNull
 import xyz.aerii.athen.annotations.Priority
 import xyz.aerii.athen.api.kuudra.enums.AbstractSupply
-import xyz.aerii.athen.api.kuudra.enums.KuudraPhase
 import xyz.aerii.athen.api.kuudra.enums.KuudraPlayer
+import xyz.aerii.athen.api.kuudra.enums.KuudraPhase
 import xyz.aerii.athen.api.kuudra.enums.KuudraSupply
 import xyz.aerii.athen.api.kuudra.enums.KuudraTier
 import xyz.aerii.athen.api.location.SkyBlockIsland
@@ -24,6 +24,7 @@ import xyz.aerii.athen.events.ScoreboardEvent
 import xyz.aerii.athen.events.TickEvent
 import xyz.aerii.athen.events.core.on
 import xyz.aerii.athen.events.core.runWhen
+import xyz.aerii.athen.handlers.React
 import xyz.aerii.athen.handlers.Schrodinger
 import xyz.aerii.athen.handlers.Smoothie
 import xyz.aerii.athen.handlers.Smoothie.client
@@ -37,14 +38,16 @@ object KuudraAPI {
     private val defeatRegex = Regex("^\\s+DEFEAT")
     private val buildRegex = Regex("Building Progress (?<progress>\\d+)% \\((?<players>\\d) Players Helping\\)")
     private val progressRegex = Regex("^PROGRESS: (?<progress>\\d+)%")
+    private val eatRegex = Regex("^(?<user>\\w+) has been eaten by Kuudra!$")
+    private val stunRegex = Regex("^\\w+ has destroyed one of Kuudra's pods!$")
 
-    private val set = setOf(KuudraPhase.SUPPLIES, KuudraPhase.FUEL)
+    private val set = setOf(KuudraPhase.Supply, KuudraPhase.Fuel)
     private val set0 = setOf(KuudraSupply.supply, KuudraSupply.fuel)
 
     private val _k = Schrodinger(::fn) { !it.isAlive }
 
     @JvmStatic
-    var buildProgress: Int = 0
+    var buildProgress: React<Int> = React(0)
         private set
 
     @JvmStatic
@@ -87,31 +90,35 @@ object KuudraAPI {
 
         on<TickEvent.Client> {
             if (!inRun) return@on
-            if (phase !in set) return@on
-
             if (ticks % 2 != 0) return@on
 
-            if (phase == KuudraPhase.SUPPLIES) for (s in supplies) s.pos()
-            else if (phase == KuudraPhase.FUEL) for (f in fuels) f.pos()
+            val player = client.player ?: return@on
+            if (KuudraPhase.Skip.active && player.position().y < 10) phase = KuudraPhase.Kill.start()
+
+            if (phase !in set) return@on
+            if (phase == KuudraPhase.Supply) for (s in supplies) s.pos()
+            else if (phase == KuudraPhase.Fuel) for (f in fuels) f.pos()
 
             if (ticks % 10 != 0) return@on
             val players = McLevel.players.takeIf { it.isNotEmpty() } ?: return@on
 
-            if (phase == KuudraPhase.SUPPLIES) for (s in supplies) s.nearby = players.any { s.radAABB.contains(it.position()) }
-            else if (phase == KuudraPhase.FUEL) for (f in fuels) f.nearby = players.any { f.radAABB.contains(it.position()) }
+            if (phase == KuudraPhase.Supply) for (s in supplies) s.nearby = players.any { s.radAABB.contains(it.position()) }
+            else if (phase == KuudraPhase.Fuel) for (f in fuels) f.nearby = players.any { f.radAABB.contains(it.position()) }
         }.runWhen(SkyBlockIsland.KUUDRA.inIsland)
 
         on<EntityEvent.Update.Equipment> {
             if (!inRun) return@on
-            if (phase?.int == KuudraPhase.LAIR.int) return@on
-            if (phase == KuudraPhase.BUILD && buildProgress < 90) return@on
+            val phase = phase ?: return@on
+
+            if (phase.ordinal > KuudraPhase.Fuel.ordinal) return@on
+            if (phase == KuudraPhase.Build && buildProgress.value < 90) return@on
             val e = entity as? Giant ?: return@on
 
             if (supplies.any { it.entity == e } || fuels.any { it.entity == e }) return@on
             if (e.mainHandItem?.getTexture() !in set0) return@on
 
             val s = AbstractSupply(e)
-            if (phase == KuudraPhase.SUPPLIES) supplies += s
+            if (phase == KuudraPhase.Supply) supplies += s
             else fuels += s
         }.runWhen(SkyBlockIsland.KUUDRA.inIsland)
 
@@ -120,7 +127,7 @@ object KuudraAPI {
             if (phase !in set) return@on
             val e = entity as? Giant ?: return@on
 
-            if (phase == KuudraPhase.SUPPLIES) supplies.removeIf { it.entity == e }
+            if (phase == KuudraPhase.Supply) supplies.removeIf { it.entity == e }
             else fuels.removeIf { it.entity == e }
         }.runWhen(SkyBlockIsland.KUUDRA.inIsland)
 
@@ -128,12 +135,12 @@ object KuudraAPI {
             if (!inRun) return@on
             val phase = phase ?: return@on
 
-            if (phase.int > 2) return@on
+            if (phase.ordinal > KuudraPhase.Build.ordinal) return@on
             val pos = infoLineEntity.blockPosition()
             val n = component.stripped()
 
             when (phase) {
-                KuudraPhase.SUPPLIES -> {
+                KuudraPhase.Supply -> {
                     when (n) {
                         "BRING SUPPLY CHEST HERE" -> {
                             KuudraSupply.at(pos)?.active = false
@@ -145,7 +152,7 @@ object KuudraAPI {
                     }
                 }
 
-                KuudraPhase.BUILD -> {
+                KuudraPhase.Build -> {
                     if (n == "PROGRESS: COMPLETE") {
                         KuudraSupply.at(pos, 100)?.built = true
                         return@on
@@ -156,7 +163,7 @@ object KuudraAPI {
                     } ?: return@on
 
                     buildRegex.findOrNull(n, "progress", "players") { (p0, p1) ->
-                        buildProgress = p0.toInt()
+                        buildProgress.value = p0.toInt()
                         buildPlayers = p1.toInt()
                     }
                 }
@@ -177,20 +184,20 @@ object KuudraAPI {
             when {
                 stripped == "[NPC] Elle: Okay adventurers, I will go and fish up Kuudra!" -> {
                     KuudraEvent.Start.post()
-                    phase = KuudraPhase.SUPPLIES
+                    phase = KuudraPhase.Supply.start()
                     inRun = true
                 }
 
                 stripped == "[NPC] Elle: OMG! Great work collecting my supplies!" -> {
-                    phase = KuudraPhase.BUILD
+                    phase = KuudraPhase.Build.start()
                 }
 
                 stripped == "[NPC] Elle: Phew! The Ballista is finally ready! It should be strong enough to tank Kuudra's blows now!" -> {
-                    phase = KuudraPhase.FUEL
+                    phase = KuudraPhase.Fuel.start()
                 }
 
                 stripped == "[NPC] Elle: POW! SURELY THAT'S IT! I don't think he has any more in him!" -> {
-                    if (tier == KuudraTier.INFERNAL) phase = KuudraPhase.LAIR
+                    phase = if (tier?.int in KuudraPhase.Skip.tiers) KuudraPhase.Skip.start() else KuudraPhase.Kill.start()
                 }
 
                 completeRegex.matches(stripped) -> {
@@ -206,10 +213,28 @@ object KuudraAPI {
                 }
 
                 else -> {
-                    val m = deathRegex.find(stripped) ?: return@on
-                    val n = m.groups["username"]?.value?.takeIf { it != "You" } ?: Smoothie.playerName ?: return@on
+                    deathRegex.findThenNull(stripped, "username") { (username) ->
+                        val n = username.takeIf { it != "You" } ?: Smoothie.playerName ?: return@findThenNull
 
-                    teammates.find { it.name == n }?.deaths++
+                        teammates.find { it.name == n }?.deaths++
+                    } ?: return@on
+
+                    val tier = tier ?: return@on
+                    if (tier.int < KuudraTier.BURNING.int) return@on
+                    if (KuudraPhase.Stun.started && KuudraPhase.DPS.started) return@on
+
+                    if (!KuudraPhase.Stun.started) {
+                        eatRegex.findThenNull(stripped, "user") { (user) ->
+                            if (user == "Elle") return@findThenNull
+                            phase = KuudraPhase.Stun.start()
+                        } ?: return@on
+                    }
+
+                    if (!KuudraPhase.DPS.started) {
+                        stunRegex.findThenNull(stripped) {
+                            phase = KuudraPhase.DPS.start()
+                        } ?: return@on
+                    }
                 }
             }
         }.runWhen(SkyBlockIsland.KUUDRA.inIsland)
@@ -224,12 +249,13 @@ object KuudraAPI {
         phase = null
         inRun = false
 
-        buildProgress = 0
+        buildProgress.value = 0
         buildPlayers = 0
 
         supplies.clear()
         fuels.clear()
         teammates.clear()
         KuudraSupply.reset()
+        KuudraPhase.reset()
     }
 }

@@ -4,21 +4,19 @@ package xyz.aerii.athen.modules.impl.kuudra
 
 import com.mojang.serialization.Codec
 import net.minecraft.network.chat.Component
-import tech.thatgravyboat.skyblockapi.utils.regex.RegexUtils.findThenNull
 import xyz.aerii.athen.annotations.Load
 import xyz.aerii.athen.annotations.OnlyIn
 import xyz.aerii.athen.api.kuudra.KuudraAPI
+import xyz.aerii.athen.api.kuudra.enums.KuudraPhase
 import xyz.aerii.athen.api.kuudra.enums.KuudraTier
 import xyz.aerii.athen.api.location.SkyBlockIsland
 import xyz.aerii.athen.config.Category
 import xyz.aerii.athen.events.KuudraEvent
 import xyz.aerii.athen.events.LocationEvent
-import xyz.aerii.athen.events.MessageEvent
 import xyz.aerii.athen.events.TickEvent
 import xyz.aerii.athen.events.core.override
 import xyz.aerii.athen.handlers.Chronos
 import xyz.aerii.athen.handlers.Scribble
-import xyz.aerii.athen.handlers.Smoothie.client
 import xyz.aerii.athen.handlers.Texter.parse
 import xyz.aerii.athen.handlers.Typo.lie
 import xyz.aerii.athen.handlers.Typo.modMessage
@@ -65,20 +63,16 @@ object KuudraSplits : Module(
 
     private val scribble = Scribble("features/kuudraSplits")
 
-    private val eatRegex = Regex("^(?<user>\\w+) has been eaten by Kuudra!$")
-    private val stunRegex = Regex("^\\w+ has destroyed one of Kuudra's pods!$")
-
     private var display: List<Component>? = null
 
     init {
         on<LocationEvent.ServerConnect> {
-            Split.reset()
             display = null
         }.override()
 
         on<KuudraEvent.End.Success> {
             val tier = KuudraAPI.tier?.int ?: return@on
-            val splits = Split.entries.filter { tier in it.tiers }
+            val splits = KuudraPhase.entries.filter { tier in it.tiers }
 
             val first = splits.firstOrNull { it.started } ?: return@on
             val pBs = splits.associateWith { PB.get(tier, it) }
@@ -112,14 +106,11 @@ object KuudraSplits : Module(
                 " <dark_gray>• <red>Overall<r>: $t0 <gray>[$t1]$str".parse().lie()
             }
         }
+
         on<TickEvent.Client> {
             if (!KuudraAPI.inRun) return@on
             val tier = KuudraAPI.tier?.int ?: return@on
-            val player = client.player ?: return@on
-
-            if (Split.Skip.active && player.position().y < 10) Split.Kill.start()
-
-            val splits = Split.entries.filter { tier in it.tiers }
+            val splits = KuudraPhase.entries.filter { tier in it.tiers }
             val list = mutableListOf<Component>()
 
             for (s in splits) {
@@ -141,49 +132,6 @@ object KuudraSplits : Module(
             list += estimateStyle.prs("Estimate", ms.toDurationFromMillis(secondsDecimals = 1), "", "")
             display = list
         }
-
-        on<MessageEvent.Chat.Receive> {
-            if (!KuudraAPI.inRun) return@on
-            val tier = KuudraAPI.tier?.int ?: return@on
-
-            when (stripped) {
-                "[NPC] Elle: Okay adventurers, I will go and fish up Kuudra!" -> {
-                    Split.Supply.start()
-                }
-
-                "[NPC] Elle: OMG! Great work collecting my supplies!" -> {
-                    Split.Build.start()
-                }
-
-                "[NPC] Elle: Phew! The Ballista is finally ready! It should be strong enough to tank Kuudra's blows now!" -> {
-                    if (tier in Split.Fuel.tiers) return@on Split.Fuel.start()
-                    Split.Eaten.start()
-                }
-
-                "[NPC] Elle: POW! SURELY THAT'S IT! I don't think he has any more in him!" -> {
-                    if (tier in Split.Skip.tiers) Split.Skip.start()
-                    else Split.Kill.start()
-                }
-
-                else -> {
-                    if (tier < KuudraTier.BURNING.int) return@on
-                    if (Split.Stun.started && Split.DPS.started) return@on
-
-                    if (!Split.Stun.started) {
-                        eatRegex.findThenNull(stripped, "user") { (user) ->
-                            if (user == "Elle") return@findThenNull
-                            Split.Stun.start()
-                        }
-                    }
-
-                    if (!Split.DPS.started) {
-                        stunRegex.findThenNull(stripped) {
-                            Split.DPS.start()
-                        }
-                    }
-                }
-            }
-        }
     }
 
     private fun String.prs(name: String, time: String, tick: String, pb: String): Component = this
@@ -203,7 +151,7 @@ object KuudraSplits : Module(
         return " $color[${if (f) "-" else "+"}$abs]"
     }
 
-    private fun List<Split>.est(tier: Int): Long = sumOf { s ->
+    private fun List<KuudraPhase>.est(tier: Int): Long = sumOf { s ->
         val e = when (estimateType) {
             0 -> PB.get(tier, s)
             1 -> Average.get(tier, s)
@@ -215,103 +163,18 @@ object KuudraSplits : Module(
         else e
     }
 
-    private enum class Split(val est: Long, val tiers: IntRange = KuudraTier.BASIC.int..KuudraTier.INFERNAL.int) {
-        Supply(34_000),
-        Build(20_000),
-        Fuel(15_000, KuudraTier.BASIC.int..KuudraTier.HOT.int),
-        Eaten(5_000, KuudraTier.BURNING.int..KuudraTier.INFERNAL.int),
-        Stun(1_000, KuudraTier.BURNING.int..KuudraTier.INFERNAL.int),
-        DPS(5_000, KuudraTier.BURNING.int..KuudraTier.INFERNAL.int),
-        Skip(5_000, KuudraTier.INFERNAL.int..KuudraTier.INFERNAL.int),
-        Kill(4_000);
-
-        var startTick: Int = 0
-        var startTime: Long = 0
-
-        var endTick: Int = 0
-        var endTime: Long = 0
-
-        val durTime: Long
-            get() {
-                if (startTime == 0L) return 0
-                if (endTime == 0L) return System.currentTimeMillis() - startTime
-                return (endTime - startTime).coerceAtLeast(0)
-            }
-
-        val durTicks: Int
-            get() {
-                if (startTick == 0) return 0
-                if (endTick == 0) return Chronos.Ticker.tickServer - startTick
-                return (endTick - startTick).coerceAtLeast(0)
-            }
-
-        val str: String =
-            name.lowercase().replaceFirstChar { it.uppercase() }
-
-        val active: Boolean
-            get() = started && !ended
-
-        val started: Boolean
-            get() = startTime != 0L
-
-        val ended: Boolean
-            get() = endTime != 0L
-
-        val style: String
-            get() {
-                if (!advanced) return generalStyle
-
-                return when (this) {
-                    Supply -> supplyStyle
-                    Build -> buildStyle
-                    Fuel -> fuelStyle
-                    Eaten -> eatStyle
-                    Stun -> stunStyle
-                    DPS -> dpsStyle
-                    Skip -> skipStyle
-                    Kill -> killStyle
-                }
-            }
-
-        fun reset() {
-            startTime = 0
-            startTick = 0
-            endTime = 0
-            endTick = 0
-        }
-
-        fun start() {
-            if (started) return
-
-            startTime = System.currentTimeMillis()
-            startTick = Chronos.Ticker.tickServer
-            entries.filter { it.ordinal < ordinal }.forEach { it.end() }
-        }
-
-        fun end() {
-            if (ended) return
-
-            endTime = System.currentTimeMillis()
-            endTick = Chronos.Ticker.tickServer
-        }
-
-        companion object {
-            fun reset() = entries.forEach { it.reset() }
-        }
-    }
-
     private object PB {
         private val pbs = scribble.mutableMap("pbs", Codec.STRING, Codec.LONG)
 
-        private fun key(tier: Int, split: Split?) =
+        private fun key(tier: Int, split: KuudraPhase?) =
             if (split == null) "$tier.Overall" else "$tier.${split.name}"
 
-        fun get(tier: Int, split: Split?): Long {
+        fun get(tier: Int, split: KuudraPhase?): Long {
             val key = key(tier, split)
             return pbs.value[key] ?: 0L
         }
 
-        fun set(tier: Int, split: Split?, time: Long) {
+        fun set(tier: Int, split: KuudraPhase?, time: Long) {
             if (time <= 0L) return
 
             val key = key(tier, split)
@@ -327,7 +190,7 @@ object KuudraSplits : Module(
         private val averages = scribble.mutableMap("averages", Codec.STRING, Codec.LONG)
         private val history = scribble.mutableMap("splitHistory", Codec.STRING, Codec.LONG.listOf(0, 10), mutableMapOf())
 
-        fun set(tier: Int, split: Split, duration: Long) {
+        fun set(tier: Int, split: KuudraPhase, duration: Long) {
             val key = "$tier.${split.name}"
             val list = history.value.getOrPut(key) { mutableListOf() }.toMutableList()
 
@@ -339,11 +202,47 @@ object KuudraSplits : Module(
             averages.update { this[key] = avg }
         }
 
-        fun get(tier: Int, split: Split): Long {
+        fun get(tier: Int, split: KuudraPhase): Long {
             val key = "$tier.${split.name}"
             return averages.value[key] ?: split.est
         }
     }
+
+    private val KuudraPhase.est: Long
+        get() {
+            val eaten = this == KuudraPhase.Fuel && (KuudraAPI.tier?.int ?: 0) >= KuudraTier.BURNING.int
+            return when {
+                eaten -> 5_000L
+                else -> when (this) {
+                    KuudraPhase.Supply -> 34_000L
+                    KuudraPhase.Build -> 20_000L
+                    KuudraPhase.Fuel -> 15_000L
+                    KuudraPhase.Stun -> 1_000L
+                    KuudraPhase.DPS -> 5_000L
+                    KuudraPhase.Skip -> 5_000L
+                    KuudraPhase.Kill -> 4_000L
+                }
+            }
+        }
+
+    private val KuudraPhase.style: String
+        get() {
+            if (!advanced) return generalStyle
+
+            val eaten = this == KuudraPhase.Fuel && (KuudraAPI.tier?.int ?: 0) >= KuudraTier.BURNING.int
+            return when {
+                eaten -> eatStyle
+                else -> when (this) {
+                    KuudraPhase.Supply -> supplyStyle
+                    KuudraPhase.Build -> buildStyle
+                    KuudraPhase.Fuel -> fuelStyle
+                    KuudraPhase.Stun -> stunStyle
+                    KuudraPhase.DPS -> dpsStyle
+                    KuudraPhase.Skip -> skipStyle
+                    KuudraPhase.Kill -> killStyle
+                }
+            }
+        }
 
     private const val hudExample: String =
         "§cSupply§f: 47.4s §7[46.4s]\n" +

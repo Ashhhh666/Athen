@@ -1,3 +1,5 @@
+@file:Suppress("ObjectPrivatePropertyName")
+
 package xyz.aerii.athen.modules.impl.kuudra
 
 import xyz.aerii.athen.annotations.Load
@@ -26,7 +28,7 @@ object BuildInfo : Module(
     private val color by config.colorPicker("Color", Color(Catppuccin.Mocha.Red.argb, true))
 
     private val render: Boolean
-        get() = KuudraAPI.inRun && KuudraAPI.phase == KuudraPhase.BUILD
+        get() = KuudraAPI.inRun && KuudraAPI.phase == KuudraPhase.Build
 
     init {
         config.hud("Build info") {

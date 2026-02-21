@@ -33,9 +33,11 @@ object SupplyWaypoints : Module(
         on<WorldRenderEvent.Extract> {
             if (!KuudraAPI.inRun) return@on
             if (!dropOff && !pickup && !fuel) return@on
+            val phase = KuudraAPI.phase ?: return@on
+            if (phase != KuudraPhase.Supply && phase != KuudraPhase.Fuel) return@on
 
-            when (KuudraAPI.phase) {
-                KuudraPhase.SUPPLIES if (dropOff || pickup) -> {
+            when (phase) {
+                KuudraPhase.Supply if (dropOff || pickup) -> {
                     if (dropOff) {
                         for (b in KuudraSupply.every) if (!b.active) Render3D.drawFilledBox(b.buildAABB, dropOffColor, false)
                     }
@@ -48,7 +50,7 @@ object SupplyWaypoints : Module(
                     }
                 }
 
-                KuudraPhase.FUEL if fuel -> {
+                KuudraPhase.Fuel if fuel -> {
                     for (s in KuudraAPI.fuels) {
                         val color = if (changeColor && s.nearby) playerColor else fuelColor
                         Render3D.drawWaypoint(s.blockPos, color, 2f, s.aabb)

@@ -38,6 +38,6 @@ public class SynchedEntityDataMixin {
         boolean b = v >= living.getMaxHealth();
 
         if (!b && (last == null || last.equals(v))) return;
-        new EntityEvent.Update.Health(living).post();
+        new EntityEvent.Update.Health(living, last, v).post();
     }
 }

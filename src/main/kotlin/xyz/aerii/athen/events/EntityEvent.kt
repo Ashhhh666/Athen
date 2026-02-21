@@ -33,7 +33,9 @@ sealed class EntityEvent {
         ) : Event()
 
         data class Health(
-            val entity: LivingEntity
+            val entity: LivingEntity,
+            val old: Float?,
+            val new: Float
         ) : Event()
 
         data class Equipment(

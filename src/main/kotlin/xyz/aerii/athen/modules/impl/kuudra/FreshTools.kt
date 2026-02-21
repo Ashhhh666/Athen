@@ -58,7 +58,7 @@ object FreshTools : Module(
 
         on<MessageEvent.Chat.Receive> {
             if (!timer.enabled && !alert) return@on
-            if (KuudraAPI.phase != KuudraPhase.BUILD) return@on
+            if (KuudraAPI.phase != KuudraPhase.Build) return@on
             if (stripped != "Your Fresh Tools Perk bonus doubles your building speed for the next 10 seconds!") return@on
 
             time = System.currentTimeMillis()
