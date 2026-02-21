@@ -190,11 +190,11 @@ object Commander {
 
                 then("checkupdate") {
                     callback {
-                        ModUpdater.checkAndNotify()
+                        ModUpdater.checkAndNotify(silent = false)
                     }
 
                     thenCallback("stream", StringArgumentType.string()) {
-                        ModUpdater.checkAndNotify(StringArgumentType.getString(this, "stream"))
+                        ModUpdater.checkAndNotify(StringArgumentType.getString(this, "stream"), false)
                     }
                 }
 
