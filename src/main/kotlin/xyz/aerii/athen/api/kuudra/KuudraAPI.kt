@@ -39,7 +39,7 @@ object KuudraAPI {
     private val buildRegex = Regex("Building Progress (?<progress>\\d+)% \\((?<players>\\d) Players Helping\\)")
     private val progressRegex = Regex("^PROGRESS: (?<progress>\\d+)%")
     private val eatRegex = Regex("^(?<user>\\w+) has been eaten by Kuudra!$")
-    private val stunRegex = Regex("^\\w+ has destroyed one of Kuudra's pods!$")
+    private val stunRegex = Regex("^\\w+ destroyed one of Kuudra's pods!$")
 
     private val set = setOf(KuudraPhase.Supply, KuudraPhase.Fuel)
     private val set0 = setOf(KuudraSupply.supply, KuudraSupply.fuel)
