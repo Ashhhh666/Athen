@@ -71,7 +71,7 @@ object SlayerCarryTracker : Module(
     private val playerLineWidth by config.slider("Player line width", 2f, 0f, 10f).dependsOn { highlightPlayer }
 
     private val tradeCompleteRegex = Regex("^Trade completed with (?:\\[.*?] )?(?<player>\\w+)!$")
-    private val coinsReceivedRegex = Regex("^ \\+ (?<amount>\\d+\\.?\\d*)M coins$")
+    private val coinsReceivedRegex = Regex("^\\+ (?<amount>\\d+\\.?\\d*)M coins$")
     private val deathRegex = Regex("^ ☠ (?<player>\\w+) was killed by (?<killer>.+)\\.$")
     private var recentTradeWith: String? = null
 
@@ -126,10 +126,15 @@ object SlayerCarryTracker : Module(
                 val recent = recentTradeWith ?: return@findThenNull
                 val amount = amountStr.toDoubleOrNull() ?: return@findThenNull
                 val matches = getPrices().flatMap { (slayerType, tiers) ->
-                    tiers.mapNotNull { (tier, priceStr) ->
-                        val price = priceStr.toDoubleOrNull()?.takeIf { it > 0 } ?: return@mapNotNull null
-                        val count = round(amount / price).toInt()
-                        if (count > 0 && abs(amount - count * price) < 0.01) CarryMatch(slayerType, tier, count, price) else null
+                    tiers.flatMap { (tier, priceStr) ->
+                        priceStr.split(',')
+                            .mapNotNull { it.trim().toDoubleOrNull() }
+                            .filter { it > 0.0 }
+                            .mapNotNull { price ->
+                                val count = round(amount / price).toInt()
+                                if (count > 0 && abs(amount - count * price) < 0.01) CarryMatch(slayerType, tier, count, price)
+                                else null
+                            }
                     }
                 }.takeIf { it.isNotEmpty() } ?: return@findThenNull
 
@@ -138,7 +143,7 @@ object SlayerCarryTracker : Module(
                         val match = matches.first()
                         "Received payment for <aqua>${match.count}x <gray>${match.type.shortName} T${match.tier}<r> carries from <aqua>$recent<r>. "
                             .parse()
-                            .append("Click to add".literal().onClick { "/${Athen.modId} carry add $recent ${match.count} ${match.type.name.lowercase()} ${match.tier}".command() })
+                            .append("Click to add".literal().onClick { add(recent, match.count, match.type.shortName.lowercase(), match.tier.toString()) })
                             .modMessage()
                     }
 
@@ -150,7 +155,7 @@ object SlayerCarryTracker : Module(
                                 "[${m.count}x ${m.type.shortName} T${m.tier}]"
                                     .literal()
                                     .withColor(TextColor.AQUA)
-                                    .onClick { "/${Athen.modId} carry add $recent ${m.count} ${m.type.name.lowercase()} ${m.tier}".command() }
+                                    .onClick { add(recent, m.count, m.type.shortName.lowercase(), m.tier.toString()) }
                             )
                         }
 
@@ -235,22 +240,9 @@ object SlayerCarryTracker : Module(
                                     thenCallback("tier", StringArgumentType.word(), listOf("any", "1", "2", "3", "4", "5")) {
                                         val player = StringArgumentType.getString(this, "player")
                                         val amount = IntegerArgumentType.getInteger(this, "amount")
-                                        val slayerTypeInput = StringArgumentType.getString(this, "slayerType").lowercase()
-                                        val tierInput = StringArgumentType.getString(this, "tier")
-
-                                        val tier = if (tierInput.equals("any", true)) -1
-                                        else tierInput.toIntOrNull()
-                                            ?: return@thenCallback "Invalid tier.".modMessage()
-
-                                        val slayerType = slayerTypeMap[slayerTypeInput]
-                                            ?: return@thenCallback "Invalid slayer type. Use: zombie, spider, wolf, void, or blaze.".modMessage()
-
-                                        if (tier != -1) {
-                                            val maxTier = slayerMaxTier[slayerType] ?: return@thenCallback "Unknown slayer tier limits.".modMessage()
-                                            if (tier !in 1..maxTier) return@thenCallback "§cTier must be 1-$maxTier or any for $slayerTypeInput.".modMessage()
-                                        }
-
-                                        SlayerCarryStateTracker.addCarry(player, amount, slayerType, tier)
+                                        val slayerType = StringArgumentType.getString(this, "slayerType").lowercase()
+                                        val tier = StringArgumentType.getString(this, "tier")
+                                        add(player, amount, slayerType, tier)
                                     }
                                 }
                             }
@@ -299,6 +291,20 @@ object SlayerCarryTracker : Module(
                 }
             }
         }
+    }
+
+    private fun add(player: String, amount: Int, slayerType: String, tier: String) {
+        val tier = if (tier.equals("any", true)) -1
+        else tier.toIntOrNull() ?: return "Invalid tier.".modMessage()
+
+        val slayerType = slayerTypeMap[slayerType] ?: return "Invalid slayer type. Use: zombie, spider, wolf, void, or blaze.".modMessage()
+
+        if (tier != -1) {
+            val maxTier = slayerMaxTier[slayerType] ?: return "Unknown slayer tier limits.".modMessage()
+            if (tier !in 1..maxTier) return "§cTier must be 1-$maxTier or any for $slayerType.".modMessage()
+        }
+
+        SlayerCarryStateTracker.addCarry(player, amount, slayerType, tier)
     }
 
     private fun getPrices(): Map<SlayerType, Map<Int, String>> {
