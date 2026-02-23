@@ -7,7 +7,9 @@ import xyz.aerii.athen.handlers.Typo.stripped
 
 sealed class MessageEvent {
     sealed class Chat {
-        data class Intercept(val message: Component) : CancellableEvent()
+        data class Intercept(val message: Component) : CancellableEvent() {
+            val stripped = message.stripped()
+        }
 
         data class Receive(val message: Component) : Event() {
             val stripped = message.stripped()

@@ -26,8 +26,8 @@ object KuudraBreakdown : Module(
     private val freshMessage = config.textInput("Fresh regex", "FRESH.*").custom("freshRegex")
     private var freshRegex: Regex? = null
 
-    private val supplyRegex = Regex("(?:\\[[^]]*])? ?(?<user>\\w+) recovered one of Elle's supplies! \\(\\d+/\\d+\\)")
-    private val fuelRegex = Regex("(?:\\[[^]]*])? ?(?<user>\\w+) recovered a Fuel Cell and charged the Ballista! \\(\\d+%\\)")
+    private val supplyRegex = Regex("(?:\\[[^]]*] )?(?<user>\\w+) recovered one of Elle's supplies! \\(\\d+/\\d+\\)")
+    private val fuelRegex = Regex("(?:\\[[^]]*] )?(?<user>\\w+) recovered a Fuel Cell and charged the Ballista! \\(\\d+%\\)")
     private val stunRegex = Regex("(?<user>\\w+) destroyed one of Kuudra's pods!")
     private val partyRegex = Regex("^Party > (?:\\[[^]]*?] )?(?<username>\\w{1,16})(?: [ቾ⚒])?: ?(?<message>.+)$")
 

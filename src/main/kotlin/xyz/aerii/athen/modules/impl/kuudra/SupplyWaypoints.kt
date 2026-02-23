@@ -1,5 +1,6 @@
 package xyz.aerii.athen.modules.impl.kuudra
 
+import tech.thatgravyboat.skyblockapi.utils.regex.RegexUtils.findOrNull
 import xyz.aerii.athen.annotations.Load
 import xyz.aerii.athen.annotations.OnlyIn
 import xyz.aerii.athen.api.kuudra.KuudraAPI
@@ -7,7 +8,11 @@ import xyz.aerii.athen.api.kuudra.enums.KuudraPhase
 import xyz.aerii.athen.api.kuudra.enums.KuudraSupply
 import xyz.aerii.athen.api.location.SkyBlockIsland
 import xyz.aerii.athen.config.Category
+import xyz.aerii.athen.events.MessageEvent
 import xyz.aerii.athen.events.WorldRenderEvent
+import xyz.aerii.athen.events.core.runWhen
+import xyz.aerii.athen.handlers.Typo.lie
+import xyz.aerii.athen.handlers.parse
 import xyz.aerii.athen.modules.Module
 import xyz.aerii.athen.ui.themes.Catppuccin
 import xyz.aerii.athen.utils.render.Render3D
@@ -28,8 +33,21 @@ object SupplyWaypoints : Module(
     private val fuelColor by config.colorPicker("Fuel color", Color(Catppuccin.Mocha.Blue.argb, true))
     private val changeColor by config.switch("Change color when player nearby", true)
     private val playerColor by config.colorPicker("Player nearby color", Color(Catppuccin.Mocha.Peach.argb, true)).dependsOn { changeColor }
+    private val customMessages = config.switch("Custom supply messages", true).custom("customMessages")
+    private val textStyle by config.textInput("Supply text style", "<red>#user <r>recovered a supply in <red>#time <gray>(#cur/#max)")
+
+    private val supplyRegex = Regex("(?:\\[[^]]*] )?(?<user>\\w+) recovered one of Elle's supplies! \\(?<cur>\\d+/?<max>\\d+\\)")
 
     init {
+        on<MessageEvent.Chat.Intercept> {
+            if (KuudraAPI.phase != KuudraPhase.Supply) return@on
+
+            supplyRegex.findOrNull(stripped, "user", "cur", "max") { (user, cur, max) ->
+                textStyle.replace("#user", user).replace("#cur", cur).replace("#max", max).parse(true).lie()
+                cancel()
+            }
+        }.runWhen(customMessages.state)
+
         on<WorldRenderEvent.Extract> {
             if (!KuudraAPI.inRun) return@on
             if (!dropOff && !pickup && !fuel) return@on

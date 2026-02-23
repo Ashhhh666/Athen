@@ -2,6 +2,7 @@ package xyz.aerii.athen.handlers
 
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientEntityEvents
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLifecycleEvents
+import net.fabricmc.fabric.api.client.message.v1.ClientReceiveMessageEvents
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents
 import net.fabricmc.fabric.api.client.rendering.v1.SpecialGuiElementRegistry
 import net.fabricmc.fabric.api.client.rendering.v1.world.WorldRenderEvents
@@ -110,6 +111,10 @@ object Signal {
 
         WorldRenderEvents.END_MAIN.register { context ->
             WorldRenderEvent.Render(context.matrices(), context.consumers() as? MultiBufferSource.BufferSource ?: return@register).post()
+        }
+
+        ClientReceiveMessageEvents.ALLOW_GAME.register { component, _ ->
+            !MessageEvent.Chat.Intercept(component).post()
         }
 
         ScreenEvents.BEFORE_INIT.register { _, screen, _, _ ->
