@@ -3,9 +3,6 @@
 package xyz.aerii.athen.modules.impl.general
 
 import net.minecraft.client.player.LocalPlayer
-import net.minecraft.network.protocol.game.ClientboundContainerClosePacket
-import net.minecraft.network.protocol.game.ClientboundOpenScreenPacket
-import net.minecraft.network.protocol.game.ServerboundContainerClosePacket
 import net.minecraft.world.inventory.ClickType
 import net.minecraft.world.inventory.Slot
 import net.minecraft.world.item.Items
@@ -15,11 +12,9 @@ import xyz.aerii.athen.annotations.Load
 import xyz.aerii.athen.annotations.OnlyIn
 import xyz.aerii.athen.config.Category
 import xyz.aerii.athen.events.GuiEvent
-import xyz.aerii.athen.events.PacketEvent
 import xyz.aerii.athen.events.core.CancellableEvent
 import xyz.aerii.athen.events.core.runWhen
 import xyz.aerii.athen.handlers.Smoothie.client
-import xyz.aerii.athen.handlers.Typo.stripped
 import xyz.aerii.athen.mixin.accessors.KeyMappingAccessor
 import xyz.aerii.athen.modules.Module
 import xyz.aerii.athen.utils.isBound
@@ -91,19 +86,15 @@ object WardrobeKeybinds : Module(
     }
 
     init {
-        on<PacketEvent.Receive, ClientboundOpenScreenPacket> {
-            menuRegex.findOrNull(title?.stripped() ?: return@on, "cur", "max") { (cur, max) ->
+        on<GuiEvent.Container.Open> {
+            menuRegex.findOrNull(stripped, "cur", "max") { (cur, max) ->
                 inMenu = true
                 currentPage = cur.toInt()
                 maxPage = max.toInt()
             }
         }
 
-        on<PacketEvent.Receive, ClientboundContainerClosePacket> {
-            reset()
-        }
-
-        on<PacketEvent.Send, ServerboundContainerClosePacket> {
+        on<GuiEvent.Container.Close> {
             reset()
         }
 

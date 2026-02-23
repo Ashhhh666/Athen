@@ -5,10 +5,12 @@ import net.minecraft.client.input.KeyEvent
 import net.minecraft.client.input.MouseButtonEvent
 import net.minecraft.network.chat.Component
 import net.minecraft.world.inventory.ClickType
+import net.minecraft.world.inventory.MenuType
 import net.minecraft.world.inventory.Slot
 import net.minecraft.world.item.ItemStack
 import xyz.aerii.athen.events.core.CancellableEvent
 import xyz.aerii.athen.events.core.Event
+import xyz.aerii.athen.handlers.Typo.stripped
 
 sealed class GuiEvent {
     sealed class Render {
@@ -27,6 +29,16 @@ sealed class GuiEvent {
                 val graphics: GuiGraphics
             ) : CancellableEvent()
         }
+
+        data class Open(
+            val title: Component,
+            val containerId: Int,
+            val type: MenuType<*>
+        ) : Event() {
+            val stripped = title.stripped()
+        }
+
+        data object Close : Event()
     }
 
     sealed class Slots {

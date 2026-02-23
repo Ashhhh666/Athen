@@ -4,10 +4,7 @@ import com.mojang.brigadier.arguments.StringArgumentType
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import net.minecraft.core.component.DataComponents
 import net.minecraft.network.chat.Component
-import net.minecraft.network.protocol.game.ClientboundContainerClosePacket
 import net.minecraft.network.protocol.game.ClientboundContainerSetContentPacket
-import net.minecraft.network.protocol.game.ClientboundOpenScreenPacket
-import net.minecraft.network.protocol.game.ServerboundContainerClosePacket
 import net.minecraft.world.item.Items
 import net.minecraft.world.item.component.ItemLore
 import tech.thatgravyboat.skyblockapi.api.profile.party.PartyAPI
@@ -202,17 +199,12 @@ object PartyFinder : Module(
             }
         }.runWhen(highlight.state)
 
-        on<PacketEvent.Receive, ClientboundOpenScreenPacket> {
-            val stripped = title.stripped()
+        on<GuiEvent.Container.Open> {
             inPartyFinder = stripped == "Party Finder"
             inMainGate = stripped == "Catacombs Gate"
         }
 
-        on<PacketEvent.Receive, ClientboundContainerClosePacket> {
-            reset()
-        }
-
-        on<PacketEvent.Send, ServerboundContainerClosePacket> {
+        on<GuiEvent.Container.Close> {
             reset()
         }
 

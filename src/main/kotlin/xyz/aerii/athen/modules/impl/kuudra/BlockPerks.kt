@@ -1,15 +1,12 @@
 package xyz.aerii.athen.modules.impl.kuudra
 
-import net.minecraft.network.protocol.game.ClientboundContainerClosePacket
-import net.minecraft.network.protocol.game.ClientboundOpenScreenPacket
-import net.minecraft.network.protocol.game.ServerboundContainerClosePacket
 import xyz.aerii.athen.annotations.Load
 import xyz.aerii.athen.annotations.OnlyIn
 import xyz.aerii.athen.api.location.SkyBlockIsland
 import xyz.aerii.athen.config.Category
 import xyz.aerii.athen.events.GuiEvent
-import xyz.aerii.athen.events.PacketEvent
 import xyz.aerii.athen.events.core.runWhen
+import xyz.aerii.athen.handlers.Itemizer.`watch$slot`
 import xyz.aerii.athen.handlers.Typo.stripped
 import xyz.aerii.athen.modules.Module
 import xyz.aerii.athen.utils.isBound
@@ -29,7 +26,7 @@ object BlockPerks : Module(
     private val basic = listOf("Auto Revive", "Human Cannonball", "Elle's Lava Rod", "Elle's Pickaxe")
 
     private val cancelRender = config.switch("Cancel slot render", true).custom("cancelRender")
-    private val key by config.keybind("Override key")
+    private val key by config.keybind("Override key").`watch$slot`()
 
     private val blockedExpandable by config.expandable("Blocked perks")
     private val perks0 = config.multiCheckbox("Cannoneer", cannoneer).childOf { blockedExpandable }.custom("cannoneer")
@@ -48,21 +45,17 @@ object BlockPerks : Module(
         perks3.state.onChange(::r)
         perks4.state.onChange(::r)
 
-        on<PacketEvent.Receive, ClientboundOpenScreenPacket> {
-            inGui = title.stripped() == "Perk Menu"
+        on<GuiEvent.Container.Open> {
+            inGui = stripped == "Perk Menu"
         }
 
-        on<PacketEvent.Receive, ClientboundContainerClosePacket> {
+        on<GuiEvent.Container.Close> {
             inGui = false
         }
 
-        on<PacketEvent.Send, ServerboundContainerClosePacket> {
-            inGui = false
-        }
-
-        on<GuiEvent.Slots.Render.Pre> {
+        on<GuiEvent.Slots.Render.Update> {
             if (!inGui) return@on
-            if (key.isPressed()) return@on
+            if (!key.isBound() || key.isPressed()) return@on
 
             val name = slot.item?.hoverName?.stripped()?.substringBeforeLast(" ") ?: return@on
             if (name in blocked) cancel()
