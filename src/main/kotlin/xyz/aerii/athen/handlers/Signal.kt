@@ -25,7 +25,6 @@ import tech.thatgravyboat.skyblockapi.api.events.info.TabListChangeEvent
 import tech.thatgravyboat.skyblockapi.api.events.minecraft.sounds.SoundPlayedEvent
 import tech.thatgravyboat.skyblockapi.api.events.misc.RegisterCommandsEvent
 import tech.thatgravyboat.skyblockapi.api.events.screen.ItemTooltipEvent
-import tech.thatgravyboat.skyblockapi.api.events.screen.PlayerHotbarChangeEvent
 import xyz.aerii.athen.annotations.Priority
 import xyz.aerii.athen.events.*
 import xyz.aerii.athen.events.core.on
@@ -127,9 +126,6 @@ object Signal {
 
     @Subscription
     fun onScoreboardUpdate(event: ScoreboardUpdateEvent) = ScoreboardEvent.Update(event.old, event.new, event.components).post()
-
-    @Subscription
-    fun onPlayerHotbarUpdate(event: PlayerHotbarChangeEvent) = PlayerEvent.HotbarChange(event.slot, event.item).post()
 
     @Subscription
     fun onCommand(event: RegisterCommandsEvent) = CommandRegistration(event).post()
