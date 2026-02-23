@@ -16,6 +16,7 @@ import xyz.aerii.athen.handlers.parse
 import xyz.aerii.athen.modules.Module
 import xyz.aerii.athen.ui.themes.Catppuccin
 import xyz.aerii.athen.utils.render.Render3D
+import xyz.aerii.athen.utils.toDurationFromMillis
 import java.awt.Color
 
 @Load
@@ -34,17 +35,24 @@ object SupplyWaypoints : Module(
     private val changeColor by config.switch("Change color when player nearby", true)
     private val playerColor by config.colorPicker("Player nearby color", Color(Catppuccin.Mocha.Peach.argb, true)).dependsOn { changeColor }
     private val customMessages = config.switch("Custom supply messages", true).custom("customMessages")
-    private val textStyle by config.textInput("Supply text style", "<red>#user <r>recovered a supply in <red>#time <gray>(#cur/#max)")
+    private val textStyle by config.textInput("Supply text style", "<gray>➤ <red>#user <r>recovered a supply in <red>#time <gray>(#cur/#max)")
 
-    private val supplyRegex = Regex("(?:\\[[^]]*] )?(?<user>\\w+) recovered one of Elle's supplies! \\(?<cur>\\d+/?<max>\\d+\\)")
+    private val supplyRegex = Regex("(?:\\[[^]]*] )?(?<user>\\w+) recovered one of Elle's supplies! \\((?<cur>\\d+)/(?<max>\\d+)\\)")
 
     init {
         on<MessageEvent.Chat.Intercept> {
             if (KuudraAPI.phase != KuudraPhase.Supply) return@on
 
             supplyRegex.findOrNull(stripped, "user", "cur", "max") { (user, cur, max) ->
-                textStyle.replace("#user", user).replace("#cur", cur).replace("#max", max).parse(true).lie()
                 cancel()
+
+                textStyle
+                    .replace("#user", user)
+                    .replace("#time", KuudraPhase.Supply.durTime.toDurationFromMillis(secondsDecimals = 1))
+                    .replace("#cur", cur)
+                    .replace("#max", max)
+                    .parse(true)
+                    .lie()
             }
         }.runWhen(customMessages.state)
 
