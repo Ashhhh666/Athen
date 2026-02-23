@@ -98,8 +98,8 @@ publishing {
     publications {
         create<MavenPublication>("maven") {
             groupId = "xyz.aerii"
-            artifactId = "Athen"
-            version = version
+            artifactId = "Athen-$mc"
+            version = project.property("mod.version").toString()
             from(components["java"])
         }
     }
