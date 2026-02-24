@@ -45,6 +45,7 @@ object StunHelper : Module(
 
     private var stunning = false
     private var belly = false
+    private var last = 0L
 
     init {
         on<LocationEvent.ServerConnect> {
@@ -119,12 +120,18 @@ object StunHelper : Module(
 
     private fun CancellableEvent.ccl() {
         cancel()
+
+        val now = System.currentTimeMillis()
+        if (now - last < 500) return
+        last = now
+
         "Blocked pickaxe ability!".modMessage()
     }
 
     private fun reset() {
         belly = false
         stunning = false
+        last = 0
     }
 
     private fun fn() {
