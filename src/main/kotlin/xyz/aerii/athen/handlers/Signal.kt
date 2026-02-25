@@ -15,6 +15,8 @@ import net.hypixel.modapi.packet.impl.clientbound.event.ClientboundLocationPacke
 import net.minecraft.client.renderer.MultiBufferSource
 import net.minecraft.network.protocol.game.ClientboundContainerClosePacket
 import net.minecraft.network.protocol.game.ClientboundOpenScreenPacket
+import net.minecraft.network.protocol.game.ClientboundSetSubtitleTextPacket
+import net.minecraft.network.protocol.game.ClientboundSetTitleTextPacket
 import net.minecraft.network.protocol.game.ClientboundSystemChatPacket
 import net.minecraft.network.protocol.game.ServerboundContainerClosePacket
 import tech.thatgravyboat.skyblockapi.api.SkyBlockAPI
@@ -75,6 +77,14 @@ object Signal {
 
         on<PacketEvent.Receive, ClientboundContainerClosePacket> {
             GuiEvent.Container.Close.post()
+        }
+
+        on<PacketEvent.Process.Pre, ClientboundSetTitleTextPacket> {
+            if (MessageEvent.Title.Main(text).post()) it.cancel()
+        }
+
+        on<PacketEvent.Process.Pre, ClientboundSetSubtitleTextPacket> {
+            if (MessageEvent.Title.Sub(text).post()) it.cancel()
         }
 
         SpecialGuiElementRegistry.register { graphics ->

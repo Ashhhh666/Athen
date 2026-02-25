@@ -16,5 +16,11 @@ sealed class MessageEvent {
         }
     }
 
+    sealed class Title {
+        data class Main(val message: Component) : CancellableEvent()
+
+        data class Sub(val message: Component) : CancellableEvent()
+    }
+
     data class ActionBar(val message: Component) : Event()
 }
