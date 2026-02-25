@@ -100,7 +100,7 @@ object TerminalAPI {
             if (terminalOpen.value) Chronos.Tick.run { reset() }
         }.runWhen((DungeonAPI.F7Phase.map { it == 3 } or TerminalSimulator.s) or TerminalSimulator.s0)
 
-        on<PacketEvent.Process.Pre, ServerboundContainerClickPacket> {
+        on<PacketEvent.Send, ServerboundContainerClickPacket> {
             if (!terminalOpen.value) return@on
             if (currentTerminal == TerminalType.MELODY) return@on
             if (containerId == lastId) return@on
@@ -109,13 +109,13 @@ object TerminalAPI {
             it.cancel()
         }.runWhen((DungeonAPI.F7Phase.map { it == 3 } or TerminalSimulator.s) or TerminalSimulator.s0)
 
-        on<PacketEvent.Process.Pre, ServerboundContainerClosePacket> {
+        on<PacketEvent.Send, ServerboundContainerClosePacket> {
             if (!terminalOpen.value) return@on
 
             reset()
         }.runWhen((DungeonAPI.F7Phase.map { it == 3 } or TerminalSimulator.s) or TerminalSimulator.s0)
 
-        on<PacketEvent.Process.Pre, ServerboundInteractPacket> {
+        on<PacketEvent.Send, ServerboundInteractPacket> {
             val entity = client.level?.getEntity((this as ServerboundInteractPacketAccessor).entityId()) as? ArmorStand ?: return@on
             if (entity.displayName?.stripped() != "Inactive Terminal") return@on
 

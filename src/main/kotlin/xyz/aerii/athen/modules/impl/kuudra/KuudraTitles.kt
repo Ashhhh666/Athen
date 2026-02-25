@@ -51,7 +51,6 @@ object KuudraTitles : Module(
 
         on<KuudraEvent.Supply.Progress> {
             if (!supply.enabled) return@on
-            if (progress == 100) return@on ::display.set(null)
 
             display = progress.str()
             cancel()

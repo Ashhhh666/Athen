@@ -95,12 +95,15 @@ object TerminalSolver : Module(
 
         on<GuiEvent.Input.Mouse.Press> {
             val term = TerminalAPI.currentTerminal ?: return@on
+            if (client.player?.containerMenu?.containerId != TerminalAPI.lastId) return@on
+
             cancel()
             if (System.currentTimeMillis() - TerminalAPI.openTime >= fcDelay) c(mouse = keyEvent.button())
         }.runWhen(TerminalAPI.terminalOpen)
 
         on<GuiEvent.Input.Key.Press> {
             TerminalAPI.currentTerminal ?: return@on
+            if (client.player?.containerMenu?.containerId != TerminalAPI.lastId) return@on
             if (System.currentTimeMillis() - TerminalAPI.openTime < fcDelay) return@on
 
             when (keyEvent.key) {
