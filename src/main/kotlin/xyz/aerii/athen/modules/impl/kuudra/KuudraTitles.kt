@@ -22,24 +22,25 @@ object KuudraTitles : Module(
     "Custom alerts and titles for kuudra!",
     Category.KUUDRA
 ) {
+    private val supplyExpandable by config.expandable("Supplies")
     private val supply = config.hud("Supply titles") {
         if (it) return@hud sizedText(dis0 ?: _dis)
         if (KuudraAPI.phase !in KuudraAPI.set) return@hud null
 
         val display = display ?: return@hud null
         sizedText(display)
-    }
+    }.childOf { supplyExpandable }
 
-    private val supplyStyle = config.textInput("Supply text style", "<dark_gray>[<green>#bars<gray>#total <r>- <aqua>#perc%<dark_gray>]").dependsOn { supply.enabled }.custom("supplyStyle")
-    private val `barCharacter$filled` by config.textInput("Filled bar character", "|").dependsOn { supply.enabled }
-    private val `barCharacter$left` by config.textInput("Left bar character", "|").dependsOn { supply.enabled }
-    private val `barCharacter$total` by config.slider("Number", 20, 5, 30, "bars").dependsOn { supply.enabled }
-    private val _unused by config.textParagraph("Variable: <red>#bars<r>, <red>#total<r>, <red>#perc").dependsOn { supply.enabled }
+    private val supplyStyle = config.textInput("Supply text style", "<dark_gray>[<green>#bars<gray>#total <r>- <aqua>#perc%<dark_gray>]").dependsOn { supply.enabled }.childOf { supplyExpandable }.custom("supplyStyle")
+    private val `barCharacter$filled` by config.textInput("Filled bar character", "|").dependsOn { supply.enabled }.childOf { supplyExpandable }
+    private val `barCharacter$left` by config.textInput("Left bar character", "|").dependsOn { supply.enabled }.childOf { supplyExpandable }
+    private val `barCharacter$total` by config.slider("Number", 20, 5, 30, "bars").dependsOn { supply.enabled }.childOf { supplyExpandable }
+    private val _unused by config.textParagraph("Variable: <red>#bars<r>, <red>#total<r>, <red>#perc").dependsOn { supply.enabled }.childOf { supplyExpandable }
 
-    private val dropAlert by config.switch("Drop alert", true)
-    private val dropMessage by config.textInput("Drop alert message", "<red>Dropped supply!").dependsOn { dropAlert }
-    private val pickupAlert by config.switch("Pick up alert")
-    private val pickMessage by config.textInput("Pick up alert message", "<green>Picked up supply!").dependsOn { pickupAlert }
+    private val dropAlert by config.switch("Drop alert", true).childOf { supplyExpandable }
+    private val dropMessage by config.textInput("Drop alert message", "<red>Dropped supply!").dependsOn { dropAlert }.childOf { supplyExpandable }
+    private val pickupAlert by config.switch("Pick up alert").childOf { supplyExpandable }
+    private val pickMessage by config.textInput("Pick up alert message", "<green>Picked up supply!").dependsOn { pickupAlert }.childOf { supplyExpandable }
 
     private val _dis: Component = "§8[§a|||||||||§f|||||||||§8] §b67%".literal()
     private var dis0: Component? = null

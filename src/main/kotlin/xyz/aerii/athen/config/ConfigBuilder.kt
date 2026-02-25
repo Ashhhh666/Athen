@@ -55,10 +55,10 @@ class ConfigBuilder(
 
     fun expandable(name: String) = ExpandableBuilder(name)
 
-    fun hudElement(name: String, default: Boolean = true, outsidePreview: Boolean = true, renderer: HUDElementContext.() -> GuiGraphics.(Boolean) -> Pair<Int, Int>?): HUDElement =
+    fun hudElement(name: String, default: Boolean = true, outsidePreview: Boolean = true, renderer: HUDElementContext.() -> GuiGraphics.(Boolean) -> Pair<Int, Int>?): HUDElementBuilder =
         hudElementImpl(name, default, outsidePreview, renderer)
 
-    fun hud(name: String, default: Boolean = true, outsidePreview: Boolean = true, renderer: GuiGraphics.(Boolean) -> Pair<Int, Int>?): HUDElement =
+    fun hud(name: String, default: Boolean = true, outsidePreview: Boolean = true, renderer: GuiGraphics.(Boolean) -> Pair<Int, Int>?): HUDElementBuilder =
         hudElementImpl(name, default, outsidePreview) { renderer }
 
     fun button(text: String, onClick: () -> Unit) = option(text, ConfigManager.ElementData.Button(text, "$configKey.button_${text.hashCode()}", onClick))
@@ -67,7 +67,7 @@ class ConfigBuilder(
 
     fun <T : Any> option(default: T, data: ConfigManager.ElementData) = OptionBuilder(default, data)
 
-    private fun hudElementImpl(name: String, default: Boolean, outsidePreview: Boolean, renderer: HUDElementContext.() -> GuiGraphics.(Boolean) -> Pair<Int, Int>?): HUDElement {
+    private fun hudElementImpl(name: String, default: Boolean, outsidePreview: Boolean, renderer: HUDElementContext.() -> GuiGraphics.(Boolean) -> Pair<Int, Int>?): HUDElementBuilder {
         val elementKey = "$configKey.hud_${name.hashCode()}"
         val hudElement = HUDElement(elementKey, name, this, { 0 to 0 }, enabled = default, renderOutsidePreview = outsidePreview)
 
@@ -75,7 +75,27 @@ class ConfigBuilder(
         hudElement.renderer = HUDElementContext(this, hudElement).renderer()
         HUDManager.register(hudElement)
 
-        return hudElement
+        return HUDElementBuilder(hudElement)
+    }
+
+    inner class HUDElementBuilder(val element: HUDElement) {
+        val enabled get() = element.enabled
+        var x by element::x
+        var y by element::y
+
+        fun dependsOn(condition: () -> Boolean) = apply {
+            replaceData { it.copy(visibilityDependency = condition) }
+        }
+
+        fun childOf(parent: () -> ExpandableHandle) = apply {
+            replaceData { it.copy(visibilityDependency = { parent().invoke() }, parentKey = parent().key) }
+        }
+
+        private fun replaceData(transform: (ConfigManager.ElementData.HUDElement) -> ConfigManager.ElementData.HUDElement) {
+            val options = feature.options
+            val idx = options.indexOfFirst { it is ConfigManager.ElementData.HUDElement && it.key == element.id }
+            if (idx >= 0) options[idx] = transform(options[idx] as ConfigManager.ElementData.HUDElement)
+        }
     }
 
     inner class ExpandableBuilder(private val name: String) {
