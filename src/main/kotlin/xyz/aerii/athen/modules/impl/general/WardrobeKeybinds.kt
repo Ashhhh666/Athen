@@ -53,10 +53,10 @@ object WardrobeKeybinds : Module(
     private var menuRegex: Regex = Regex("^Wardrobe \\((?<cur>\\d)/(?<max>\\d)\\)$")
     private var currentPage: Int = 0
     private var maxPage: Int = 0
-    private var inMenu: Boolean = false
     private var lastClick: Long = 0
+    var inMenu: Boolean = false
 
-    private val wardrobeSlots = listOf(
+    val wardrobeSlots = listOf(
         WardrobeSlot(36, { acc(0) }, key0),
         WardrobeSlot(37, { acc(1) }, key1),
         WardrobeSlot(38, { acc(2) }, key2),
@@ -68,7 +68,7 @@ object WardrobeKeybinds : Module(
         WardrobeSlot(44, { acc(8) }, key8)
     )
 
-    private data class WardrobeSlot(
+    data class WardrobeSlot(
         val idx: Int,
         val supp: () -> Int,
         val keybind: Int
