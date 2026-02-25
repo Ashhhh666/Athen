@@ -46,7 +46,10 @@ object TerminatorSounds : Module(
 
         on<SoundPlayEvent> {
             val r = real ?: return@on
+
+            if (sound == SoundEvents.ARROW_SHOOT) return@on cancel()
             if (sound != SoundEvents.ARROW_HIT && sound != SoundEvents.ARROW_HIT_PLAYER) return@on
+
             val i = heldItem ?: return@on
             if (i.item !is BowItem) return@on
             if (i.getData(DataTypes.SKYBLOCK_ID)?.skyblockId != "TERMINATOR") return@on
