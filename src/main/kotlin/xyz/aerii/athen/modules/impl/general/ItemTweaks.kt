@@ -2,8 +2,11 @@
 
 package xyz.aerii.athen.modules.impl.general
 
+import net.minecraft.client.gui.Font
+import net.minecraft.client.gui.GuiGraphics
 import net.minecraft.core.component.DataComponents
 import net.minecraft.network.chat.Component
+import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
 import tech.thatgravyboat.skyblockapi.api.datatype.DataTypes
 import tech.thatgravyboat.skyblockapi.api.datatype.getData
@@ -46,8 +49,8 @@ object ItemTweaks : Module(
     private val enchants = hashSetOf("Aqua Affinity", "Depth Strider")
     private val dateFormatter = DateTimeFormatter.ofPattern("MMM dd, yyyy HH:mm").withZone(ZoneId.systemDefault())
 
-    private val `showItemStars` by config.switch("Show item stars as stack size").custom("showItemStars")
-    private val `starColor` by config.colorPicker("Star Color", java.awt.Color(0xFFFF0000.toInt(), true)).dependsOn { showItemStars }
+    private val showItemStars by config.switch("Item stars as stack size")
+    private val starColor by config.colorPicker("Star Color", java.awt.Color(0xFFFF0000.toInt(), true)).dependsOn { showItemStars }
 
     private val cakeNumbers = config.switch("Cake numbers").custom("cakeNumbers")
 
@@ -167,7 +170,7 @@ object ItemTweaks : Module(
             .apply { if (`showItemHex$box`) append("⬛".literal { color = this@hex }) }
 
     @JvmStatic
-    fun renderStarCount(guiGraphics: net.minecraft.client.gui.GuiGraphics, font: net.minecraft.client.gui.Font, stack: net.minecraft.world.item.ItemStack, x: Int, y: Int) {
+    fun renderStarCount(guiGraphics: GuiGraphics, font: Font, stack: ItemStack, x: Int, y: Int) {
         if (!showItemStars || stack.isEmpty) return
 
         val starCount = stack.getData(DataTypes.STAR_COUNT) ?: return
